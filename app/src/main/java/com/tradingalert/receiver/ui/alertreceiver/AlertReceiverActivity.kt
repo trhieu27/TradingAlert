@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.setContent
@@ -34,6 +33,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.google.firebase.messaging.FirebaseMessaging
 import com.tradingalert.receiver.R
@@ -43,9 +43,14 @@ import com.tradingalert.receiver.messaging.AlertMessagingService
 import com.tradingalert.receiver.messaging.AlertPreferenceStore
 import com.tradingalert.receiver.messaging.NotificationHelper
 import com.tradingalert.receiver.ui.theme.TradingAlertReceiverTheme
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class AlertReceiverActivity : ComponentActivity() {
+    private var notificationSettingsWatcher: Job? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         hideNavigationBarForLaunch()
         super.onCreate(savedInstanceState)
@@ -93,6 +98,40 @@ class AlertReceiverActivity : ComponentActivity() {
     }
 
     @Suppress("DEPRECATION")
+    internal fun openNotificationSettings() {
+        notificationSettingsWatcher?.cancel()
+        startActivityForResult(
+            appNotificationSettingsIntent(this),
+            NOTIFICATION_SETTINGS_REQUEST_CODE,
+        )
+        notificationSettingsWatcher = lifecycleScope.launch {
+            while (isActive) {
+                if (NotificationManagerCompat.from(this@AlertReceiverActivity)
+                        .areNotificationsEnabled()
+                ) {
+                    finishActivity(NOTIFICATION_SETTINGS_REQUEST_CODE)
+                    break
+                }
+                delay(NOTIFICATION_PERMISSION_POLL_INTERVAL_MILLIS)
+            }
+        }
+    }
+
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == NOTIFICATION_SETTINGS_REQUEST_CODE) {
+            notificationSettingsWatcher?.cancel()
+            notificationSettingsWatcher = null
+        }
+    }
+
+    override fun onDestroy() {
+        notificationSettingsWatcher?.cancel()
+        super.onDestroy()
+    }
+
+    @Suppress("DEPRECATION")
     private fun hideNavigationBarForLaunch() {
         window.decorView.systemUiVisibility =
             View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
@@ -109,11 +148,16 @@ class AlertReceiverActivity : ComponentActivity() {
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
     }
+
+    private companion object {
+        const val NOTIFICATION_SETTINGS_REQUEST_CODE = 1001
+        const val NOTIFICATION_PERMISSION_POLL_INTERVAL_MILLIS = 250L
+    }
 }
 
 @Composable
 private fun AlertReceiverRoute(
-    activity: ComponentActivity,
+    activity: AlertReceiverActivity,
     selectedLanguage: AppLanguage,
     onLanguageSelected: (AppLanguage) -> Unit,
 ) {
@@ -123,8 +167,6 @@ private fun AlertReceiverRoute(
     var state by remember { mutableStateOf(loadAlertReceiverState(context)) }
     val permissionGrantedMessage = stringResource(R.string.notification_permission_granted)
     val permissionDeniedMessage = stringResource(R.string.notification_permission_denied)
-    val notificationSettingsInstruction =
-        stringResource(R.string.notification_settings_instruction)
     val tokenFetchFailedMessage = stringResource(R.string.token_fetch_failed)
     val firebaseConfigMissingMessage = stringResource(R.string.firebase_config_missing)
 
@@ -132,26 +174,12 @@ private fun AlertReceiverRoute(
         scope.launch { snackbarHostState.showSnackbar(message) }
     }
 
-    fun refresh(): AlertReceiverUiState {
+    fun refresh() {
         val persisted = loadAlertReceiverState(context)
         state = persisted.copy(
             token = if (isUsableToken(state.token) && !isUsableToken(persisted.token)) state.token else persisted.token,
             tokenUpdatedAt = maxOf(state.tokenUpdatedAt, persisted.tokenUpdatedAt),
             tokenRefreshing = state.tokenRefreshing,
-        )
-        return persisted
-    }
-
-    val notificationSettingsLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult(),
-    ) {
-        val refreshedState = refresh()
-        showMessage(
-            if (refreshedState.notificationsAllowed) {
-                permissionGrantedMessage
-            } else {
-                permissionDeniedMessage
-            },
         )
     }
 
@@ -166,12 +194,7 @@ private fun AlertReceiverRoute(
                     activity,
                     Manifest.permission.POST_NOTIFICATIONS,
                 ) -> {
-                Toast.makeText(
-                    context,
-                    notificationSettingsInstruction,
-                    Toast.LENGTH_LONG,
-                ).show()
-                notificationSettingsLauncher.launch(appNotificationSettingsIntent(context))
+                activity.openNotificationSettings()
             }
             else -> showMessage(permissionDeniedMessage)
         }
@@ -242,7 +265,7 @@ private fun AlertReceiverRoute(
             ) {
                 permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             } else if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) {
-                notificationSettingsLauncher.launch(appNotificationSettingsIntent(context))
+                activity.openNotificationSettings()
             } else {
                 NotificationHelper.createChannel(context)
                 activity.startActivity(alertSoundSettingsIntent(context))

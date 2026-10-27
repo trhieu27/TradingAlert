@@ -17,7 +17,7 @@ import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.NotificationsActive
-import androidx.compose.material.icons.rounded.Security
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.Slider as ClassicSlider
 import androidx.compose.material.SliderDefaults as ClassicSliderDefaults
@@ -29,6 +29,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -37,6 +39,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tradingalert.receiver.R
+import kotlinx.coroutines.delay
 import java.text.DateFormat
 import java.util.Date
 import kotlin.math.roundToInt
@@ -56,7 +59,7 @@ internal fun QuickActionsCard(
     ) {
         Column(Modifier.padding(16.dp)) {
             SectionTitle(
-                Icons.Rounded.NotificationsActive,
+                Icons.Rounded.Settings,
                 stringResource(R.string.alert_settings_title),
                 stringResource(R.string.alert_settings_subtitle),
             )
@@ -87,21 +90,6 @@ internal fun QuickActionsCard(
                 Icon(Icons.AutoMirrored.Rounded.VolumeUp, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.app_sound_settings))
-            }
-            Spacer(Modifier.height(10.dp))
-            Row(verticalAlignment = Alignment.Top) {
-                Icon(
-                    Icons.Rounded.Security,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.size(17.dp),
-                )
-                Spacer(Modifier.width(7.dp))
-                Text(
-                    stringResource(R.string.channel_security_note),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
         }
     }
@@ -154,6 +142,18 @@ private fun AlertSettingSlider(
 
 @Composable
 internal fun LastMessageCard(state: AlertReceiverUiState) {
+    val currentTimeMillis by produceState(
+        initialValue = System.currentTimeMillis(),
+        key1 = state.lastTime,
+    ) {
+        while (true) {
+            val now = System.currentTimeMillis()
+            value = now
+            val elapsed = (now - state.lastTime).coerceAtLeast(0L)
+            delay(60_000L - elapsed.mod(60_000L))
+        }
+    }
+
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -189,6 +189,7 @@ internal fun LastMessageCard(state: AlertReceiverUiState) {
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                     )
+                    Spacer(Modifier.height(4.dp))
                     Text(
                         stringResource(
                             if (state.lastTitle == null) {
@@ -207,7 +208,7 @@ internal fun LastMessageCard(state: AlertReceiverUiState) {
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.72f),
                     ) {
                         Text(
-                            text = relativeTimeText(state.lastTime),
+                            text = relativeTimeText(state.lastTime, currentTimeMillis),
                             modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
@@ -297,6 +298,7 @@ internal fun SectionTitle(
         Spacer(Modifier.width(9.dp))
         Column {
             Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(4.dp))
             Text(
                 subtitle,
                 style = MaterialTheme.typography.labelMedium,
@@ -307,8 +309,8 @@ internal fun SectionTitle(
 }
 
 @Composable
-private fun relativeTimeText(timestamp: Long): String {
-    val minutes = ((System.currentTimeMillis() - timestamp).coerceAtLeast(0L) / 60_000L)
+private fun relativeTimeText(timestamp: Long, currentTimeMillis: Long): String {
+    val minutes = ((currentTimeMillis - timestamp).coerceAtLeast(0L) / 60_000L)
     return when {
         minutes < 1 -> stringResource(R.string.time_just_now)
         minutes < 60 -> pluralStringResource(
@@ -319,6 +321,10 @@ private fun relativeTimeText(timestamp: Long): String {
         minutes < 1_440 -> {
             val hours = minutes / 60
             pluralStringResource(R.plurals.time_hours_ago, hours.toInt(), hours)
+        }
+        minutes < 43_200 -> {
+            val days = minutes / 1_440
+            pluralStringResource(R.plurals.time_days_ago, days.toInt(), days)
         }
         else -> DateFormat.getDateInstance(DateFormat.SHORT).format(Date(timestamp))
     }

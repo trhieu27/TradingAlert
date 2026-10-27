@@ -1,9 +1,8 @@
 <resources>
     <string name="app_name">Trading Alert Receiver</string>
     <string name="app_short_name">Trading Alert</string>
-    <string name="app_subtitle">Firebase signal receiver</string>
+    <string name="app_subtitle">Receive signals from Firebase</string>
     <string name="app_icon_description">Trading Alert icon</string>
-    <string name="notification_channel_settings">Notification channel settings</string>
     <string name="switch_to_english">Switch to English</string>
     <string name="switch_to_vietnamese">Switch to Vietnamese</string>
 
@@ -24,7 +23,6 @@
     <string name="sound_duration">Sound duration</string>
     <string name="sound_duration_value">%1$d seconds</string>
     <string name="app_sound_settings">System notification settings</string>
-    <string name="channel_security_note">The volume and sound duration above only apply to alerts from this app.</string>
 
     <string name="token_loading">Getting token…</string>
     <string name="token_fetch_failed">No token available. Check Firebase and your network connection.</string>
@@ -40,7 +38,6 @@
 
     <string name="notification_permission_granted">Notifications enabled</string>
     <string name="notification_permission_denied">Notification permission was not granted</string>
-    <string name="notification_settings_instruction">Enable notifications, then press Back to return to the app.</string>
 
     <string name="notification_channel_name">Trading alerts</string>
     <string name="notification_channel_description">Notification channel for Trading Alert Receiver signals</string>
@@ -55,6 +52,10 @@
     <plurals name="time_hours_ago">
         <item quantity="one">%1$d hour ago</item>
         <item quantity="other">%1$d hours ago</item>
+    </plurals>
+    <plurals name="time_days_ago">
+        <item quantity="one">%1$d day ago</item>
+        <item quantity="other">%1$d days ago</item>
     </plurals>
 
     <string name="preview_signal_title">BTCUSDT breakout</string>

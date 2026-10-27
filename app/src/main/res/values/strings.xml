@@ -1,9 +1,8 @@
 <resources>
     <string name="app_name">Trading Alert Receiver</string>
     <string name="app_short_name">Trading Alert</string>
-    <string name="app_subtitle">Trình nhận tín hiệu Firebase</string>
+    <string name="app_subtitle">Nhận tín hiệu từ Firebase</string>
     <string name="app_icon_description">Biểu tượng Trading Alert</string>
-    <string name="notification_channel_settings">Cài đặt kênh thông báo</string>
     <string name="switch_to_english">Chuyển sang English</string>
     <string name="switch_to_vietnamese">Chuyển sang Tiếng Việt</string>
 
@@ -24,7 +23,6 @@
     <string name="sound_duration">Thời lượng chuông</string>
     <string name="sound_duration_value">%1$d giây</string>
     <string name="app_sound_settings">Cài đặt thông báo hệ thống</string>
-    <string name="channel_security_note">Âm lượng và thời lượng chuông bên trên chỉ áp dụng cho cảnh báo của app này.</string>
 
     <string name="token_loading">Đang lấy token…</string>
     <string name="token_fetch_failed">Chưa có token. Kiểm tra Firebase và kết nối mạng.</string>
@@ -40,7 +38,6 @@
 
     <string name="notification_permission_granted">Đã bật thông báo</string>
     <string name="notification_permission_denied">Bạn chưa cấp quyền thông báo</string>
-    <string name="notification_settings_instruction">Bật quyền Thông báo rồi nhấn Quay lại để trở về app.</string>
 
     <string name="notification_channel_name">Cảnh báo giao dịch</string>
     <string name="notification_channel_description">Kênh hiển thị tín hiệu của Trading Alert Receiver</string>
@@ -55,6 +52,10 @@
     <plurals name="time_hours_ago">
         <item quantity="one">%1$d giờ trước</item>
         <item quantity="other">%1$d giờ trước</item>
+    </plurals>
+    <plurals name="time_days_ago">
+        <item quantity="one">%1$d ngày trước</item>
+        <item quantity="other">%1$d ngày trước</item>
     </plurals>
 
     <string name="preview_signal_title">BTCUSDT breakout</string>

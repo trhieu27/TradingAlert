@@ -69,6 +69,7 @@ internal fun ConnectionStrip(state: AlertReceiverUiState) {
                     stringResource(R.string.connection_title),
                     style = MaterialTheme.typography.labelLarge,
                 )
+                Spacer(Modifier.height(4.dp))
                 Text(
                     stringResource(R.string.connection_subtitle),
                     style = MaterialTheme.typography.labelSmall,

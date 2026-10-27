@@ -18,10 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -113,12 +110,6 @@ internal fun AlertReceiverContent(
                         selectedLanguage = selectedLanguage,
                         onLanguageSelected = onLanguageSelected,
                     )
-                    IconButton(onClick = onOpenSoundSettings) {
-                        Icon(
-                            Icons.Rounded.Tune,
-                            contentDescription = stringResource(R.string.notification_channel_settings),
-                        )
-                    }
                 },
             )
         },
@@ -248,9 +239,8 @@ internal fun PhoneLayout(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item { ConnectionStrip(state) }
-        if (!state.notificationsAllowed) item { NotificationPermissionCard(onRequestPermission) }
-        if (state.lastTitle != null) item { LastMessageCard(state) }
         if (state.notificationsAllowed) {
+            item { LastMessageCard(state) }
             item {
                 QuickActionsCard(
                     volumePercent = state.alertVolumePercent,
@@ -260,8 +250,9 @@ internal fun PhoneLayout(
                     onOpenSoundSettings = onOpenSoundSettings,
                 )
             }
+        } else {
+            item { NotificationPermissionCard(onRequestPermission) }
         }
-        if (state.lastTitle == null) item { LastMessageCard(state) }
         item { DeliveryTipCard() }
     }
 }
@@ -311,8 +302,8 @@ internal fun WideLayout(
                         onOpenSoundSettings = onOpenSoundSettings,
                     )
                 }
+                item { LastMessageCard(state) }
             }
-            item { LastMessageCard(state) }
         }
     }
 }
