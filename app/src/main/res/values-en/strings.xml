@@ -6,17 +6,6 @@
     <string name="switch_to_english">Switch to English</string>
     <string name="switch_to_vietnamese">Switch to Vietnamese</string>
     <string name="notification_history_open">Open notification history</string>
-    <string name="firebase_config_open">Edit Firebase configuration</string>
-    <string name="firebase_config_title">Firebase configuration</string>
-    <string name="firebase_config_description">Paste the google-services.json content. It must contain an Android app with package com.tradingalert.receiver.</string>
-    <string name="firebase_config_json_label">JSON content</string>
-    <string name="firebase_config_json_placeholder">Paste google-services.json here</string>
-    <string name="save_firebase_config">Save configuration</string>
-    <string name="firebase_config_saved">Firebase configuration changed. Getting a new token.</string>
-    <string name="firebase_config_invalid">The Firebase JSON is invalid or missing required data.</string>
-    <string name="firebase_config_package_mismatch">Package com.tradingalert.receiver was not found in this configuration.</string>
-    <string name="firebase_config_too_large">The configuration file is too large.</string>
-    <string name="cancel">Cancel</string>
     <string name="notification_history_title">Notification history</string>
     <string name="notification_history_empty">No notifications received yet.</string>
     <string name="notification_history_loading">Loading notification history…</string>
@@ -47,7 +36,7 @@
 
     <string name="token_loading">Getting token…</string>
     <string name="token_fetch_failed">No token available. Check Firebase and your network connection.</string>
-    <string name="firebase_config_missing">Firebase configuration is missing: app/google-services.json</string>
+    <string name="server_config_failed">Unable to load messaging configuration from the server.</string>
 
     <string name="latest_signal_title">Latest signal</string>
     <string name="latest_signal_empty_subtitle">No data yet</string>

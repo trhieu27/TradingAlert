@@ -6,17 +6,6 @@
     <string name="switch_to_english">Chuyển sang English</string>
     <string name="switch_to_vietnamese">Chuyển sang Tiếng Việt</string>
     <string name="notification_history_open">Mở lịch sử thông báo</string>
-    <string name="firebase_config_open">Chỉnh cấu hình Firebase</string>
-    <string name="firebase_config_title">Cấu hình Firebase</string>
-    <string name="firebase_config_description">Dán nội dung google-services.json. Cấu hình phải chứa ứng dụng Android có package com.tradingalert.receiver.</string>
-    <string name="firebase_config_json_label">Nội dung JSON</string>
-    <string name="firebase_config_json_placeholder">Dán google-services.json tại đây</string>
-    <string name="save_firebase_config">Lưu cấu hình</string>
-    <string name="firebase_config_saved">Đã đổi cấu hình Firebase và đang lấy token mới.</string>
-    <string name="firebase_config_invalid">JSON Firebase không hợp lệ hoặc thiếu dữ liệu bắt buộc.</string>
-    <string name="firebase_config_package_mismatch">Không tìm thấy package com.tradingalert.receiver trong cấu hình này.</string>
-    <string name="firebase_config_too_large">File cấu hình quá lớn.</string>
-    <string name="cancel">Hủy</string>
     <string name="notification_history_title">Lịch sử thông báo</string>
     <string name="notification_history_empty">Chưa nhận được thông báo nào.</string>
     <string name="notification_history_loading">Đang tải lịch sử thông báo…</string>
@@ -47,7 +36,7 @@
 
     <string name="token_loading">Đang lấy token…</string>
     <string name="token_fetch_failed">Chưa có token. Kiểm tra Firebase và kết nối mạng.</string>
-    <string name="firebase_config_missing">Thiếu cấu hình Firebase: app/google-services.json</string>
+    <string name="server_config_failed">Không tải được cấu hình nhận tin từ server.</string>
 
     <string name="latest_signal_title">Tín hiệu gần nhất</string>
     <string name="latest_signal_empty_subtitle">Chưa có dữ liệu</string>

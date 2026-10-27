@@ -9,6 +9,9 @@ import com.tradingalert.receiver.R
 import com.tradingalert.receiver.data.notification.NotificationHistoryRepository
 import com.tradingalert.receiver.localization.AppLanguageManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 class AlertMessagingService : FirebaseMessagingService() {
@@ -102,13 +105,23 @@ class AlertMessagingService : FirebaseMessagingService() {
             .putLong(KEY_TOKEN_TIME, System.currentTimeMillis())
             .apply()
 
-        FirebaseMessaging.getInstance()
-            .subscribeToTopic(BROADCAST_TOPIC)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Log.d(TAG, "FCM token refreshed and broadcast topic subscribed")
-                } else {
-                    Log.w(TAG, "Unable to subscribe to FCM broadcast topic", task.exception)
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            MessagingServerConfig.fetchAndApply(this@AlertMessagingService)
+                .onSuccess { config ->
+                    MessagingServerConfig.subscribe(
+                        context = this@AlertMessagingService,
+                        messaging = FirebaseMessaging.getInstance(),
+                        topic = config.topic,
+                    ) { subscribed ->
+                        if (subscribed) {
+                            Log.d(TAG, "FCM token refreshed and server topic subscribed")
+                        } else {
+                            Log.w(TAG, "Unable to subscribe to the server-configured FCM topic")
+                        }
+                    }
+                }
+                .onFailure { error ->
+                    Log.w(TAG, "Unable to load messaging configuration from server", error)
                 }
             }
     }
@@ -120,7 +133,6 @@ class AlertMessagingService : FirebaseMessagingService() {
         const val KEY_LAST_TITLE = "last_title"
         const val KEY_LAST_BODY = "last_body"
         const val KEY_LAST_TIME = "last_time"
-        const val BROADCAST_TOPIC = "trading_alerts"
         private const val ACTION_REMOTE_MESSAGE = "com.google.android.c2dm.intent.RECEIVE"
         private const val MAX_RECENT_MESSAGE_IDS = 20
         private const val TAG = "AlertMessaging"

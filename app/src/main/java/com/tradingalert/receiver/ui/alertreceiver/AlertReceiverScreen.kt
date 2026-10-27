@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -65,7 +64,6 @@ internal fun AlertReceiverContent(
     selectedLanguage: AppLanguage,
     snackbarHostState: SnackbarHostState,
     onLanguageSelected: (AppLanguage) -> Unit,
-    onOpenFirebaseConfig: () -> Unit,
     onRequestPermission: () -> Unit,
     onVolumeChange: (Int) -> Unit,
     onSoundDurationChange: (Int) -> Unit,
@@ -118,16 +116,6 @@ internal fun AlertReceiverContent(
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = onOpenFirebaseConfig,
-                        modifier = Modifier.size(40.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Edit,
-                            contentDescription = stringResource(R.string.firebase_config_open),
-                            modifier = Modifier.size(22.dp),
-                        )
-                    }
                     LanguageToggleButton(
                         selectedLanguage = selectedLanguage,
                         onLanguageSelected = onLanguageSelected,
@@ -438,7 +426,6 @@ internal fun AlertReceiverContentPreview() {
             selectedLanguage = AppLanguage.VIETNAMESE,
             snackbarHostState = remember { SnackbarHostState() },
             onLanguageSelected = {},
-            onOpenFirebaseConfig = {},
             onRequestPermission = {},
             onVolumeChange = {},
             onSoundDurationChange = {},

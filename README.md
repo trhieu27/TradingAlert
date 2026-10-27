@@ -1,250 +1,185 @@
 # Trading Alert Receiver
 
-Ứng dụng Android nhận tín hiệu từ Firebase Cloud Messaging (FCM), hiển thị thông báo ưu tiên cao và phát âm thanh ngắn khi ứng dụng đang mở hoặc chạy nền.
+Ứng dụng Android nhận cảnh báo giao dịch qua Firebase Cloud Messaging (FCM), hiển thị âm thanh/ảnh và lưu 50 thông báo gần nhất trong Room database.
 
-## Tính năng
+> App không dùng `google-services.json`. Firebase Android client config và topic được lấy từ backend qua `GET /config`. Service-account private key chỉ được lưu ở backend.
 
-- Nhận FCM `data message` bằng `FirebaseMessagingService`.
-- Hiển thị notification ưu tiên cao với tiếng chime riêng của ứng dụng và rung.
-- Xin quyền thông báo trên Android 13 trở lên.
-- Hiển thị và sao chép FCM registration token.
-- Gửi thông báo thử trực tiếp trên thiết bị.
-- Mở nhanh cài đặt notification channel để chọn âm thanh.
-- Lưu và hiển thị thông báo nhận gần nhất.
-- Giao diện Jetpack Compose và hỗ trợ dark mode.
+## Luồng hoạt động
 
-## Thông tin project
+```text
+TradingView → Cloudflare Worker/backend → Firebase FCM → Android app
+```
 
-| Thành phần | Giá trị |
-|---|---|
-| Tên ứng dụng | Trading Alert Receiver |
-| Package / Application ID | `com.tradingalert.receiver` |
-| Ngôn ngữ | Kotlin |
-| Giao diện | Jetpack Compose + Material 3 |
-| Min SDK | 24 — Android 7.0 |
-| Target / Compile SDK | 36 |
-| Android Gradle Plugin | 9.0.0 |
-| Gradle Wrapper | 9.6.0 |
-| Java | 17 trở lên |
+1. App gọi `GET /config` để lấy Firebase client config và topic.
+2. App khởi tạo Firebase, lấy FCM token và subscribe topic.
+3. TradingView gửi webhook đến backend.
+4. Backend gửi FCM HTTP v1 đến topic.
+5. App hiển thị và lưu thông báo.
 
-## Yêu cầu
+Lần cài mới phải mở app ít nhất một lần để tải cấu hình. Sau đó app sử dụng bản cache khi process được khởi động lại.
 
-- Android Studio có hỗ trợ AGP 9.0.0.
-- Android SDK Platform 36.
-- JDK 17 hoặc mới hơn.
-- Điện thoại có Google Play services hoặc emulator dùng Google APIs.
-- Một Firebase project đã bật Cloud Messaging.
+## Build ứng dụng
 
-## Cấu hình Firebase
+Đặt URL backend trong `gradle.properties`:
 
-### 1. Đăng ký Android app
+```properties
+WORKER_BASE_URL=https://alerts.example.workers.dev
+```
 
-1. Mở [Firebase Console](https://console.firebase.google.com/).
-2. Tạo hoặc chọn Firebase project.
-3. Thêm Android app với package chính xác:
+Build và kiểm tra:
+
+```powershell
+.\gradlew.bat testDebugUnitTest assembleDebug lintDebug
+.\gradlew.bat assembleRelease
+```
+
+Package Android bắt buộc:
 
 ```text
 com.tradingalert.receiver
 ```
 
-4. Tải file `google-services.json`.
-5. Đặt file tại:
+## Contract backend
 
-```text
-D:\app\app\google-services.json
+Backend có thể dùng Cloudflare Worker hoặc nền tảng khác, nhưng phải hỗ trợ contract dưới đây.
+
+### Lấy cấu hình Firebase
+
+```http
+GET /config
+Accept: application/json
 ```
 
-`google-services.json` và service-account key đã được `.gitignore`; không commit các file này lên Git.
-
-Project vẫn build được khi chưa có `google-services.json`, nhưng lúc đó chỉ có thể thử notification cục bộ và không thể nhận FCM thật.
-
-### 2. Firebase test và Firebase khách hàng
-
-Để test bằng Firebase của bạn, đăng ký package trên trong Firebase của bạn và dùng file `google-services.json` tương ứng. Ngoài ra có thể nhấn biểu tượng **Edit** trên thanh công cụ, dán toàn bộ nội dung JSON và chọn **Lưu cấu hình**. App sẽ kiểm tra package, đổi Firebase mặc định và lấy FCM token mới mà không cần build lại.
-
-Khi chuyển sang Firebase của khách hàng ngay trong app:
-
-1. Đăng ký cùng package `com.tradingalert.receiver` trong Firebase của khách hàng.
-2. Mở app và nhấn biểu tượng **Edit** trước nút đổi ngôn ngữ.
-3. Dán nội dung `google-services.json` của khách hàng rồi lưu.
-4. Chờ app lấy FCM token mới và dùng token đó để gửi thử.
-
-File `app/google-services.json` vẫn là cấu hình mặc định được đóng gói khi build. Cấu hình nhập trong app chỉ được lưu cục bộ trên thiết bị và được ưu tiên ở các lần mở sau.
-
-FCM token và thông tin xác thực gửi tin nhắn của hai Firebase project không dùng thay thế cho nhau.
-
-## Build và kiểm thử
-
-Các lệnh dưới đây chạy trong PowerShell tại `D:\app`.
-
-### Build APK debug
-
-```powershell
-.\gradlew.bat assembleDebug
-```
-
-APK được tạo tại:
-
-```text
-app\build\outputs\apk\debug\app-debug.apk
-```
-
-### Chạy unit test
-
-```powershell
-.\gradlew.bat testDebugUnitTest
-```
-
-### Chạy lint
-
-```powershell
-.\gradlew.bat lintDebug
-```
-
-### Clean và build lại
-
-```powershell
-.\gradlew.bat clean assembleDebug
-```
-
-## Kiểm tra notification trên thiết bị
-
-1. Cài và mở ứng dụng.
-2. Cấp quyền thông báo khi được yêu cầu.
-3. Nếu không có âm thanh, nhấn **Cài đặt thông báo hệ thống** và bật kênh **Cảnh báo giao dịch**. Màn hình này chỉ thay đổi channel của Trading Alert Receiver, không đổi âm thanh notification của ứng dụng khác.
-4. Lấy FCM token của thiết bị và gửi thử từ Firebase Console hoặc server.
-
-## Các loại payload FCM được hỗ trợ
-
-| Payload | App đang mở | App chạy nền | Lịch sử, âm thanh và ảnh do app xử lý |
-| --- | --- | --- | --- |
-| Chỉ `data` | App xử lý | App xử lý | Có |
-| Chỉ `notification` | App xử lý | Firebase/Android tự hiển thị | Chỉ khi app đang mở |
-| `notification` + `data` | App xử lý | Firebase/Android tự hiển thị; `data` được giao khi người dùng chạm | Chỉ khi app đang mở |
-
-Để thông báo luôn đi qua `AlertMessagingService`, được lưu vào lịch sử và dùng âm thanh riêng của app, server nên gửi **data message** với Android priority `HIGH`. Không thêm trường `notification`.
-
-Ảnh phải dùng URL HTTPS công khai. App nhận các key `image`, `image_url`, `imageUrl` hoặc `picture`; nên dùng `image`. Nếu ảnh tải thất bại, thông báo chữ vẫn được hiển thị. App giới hạn tải tối đa 12 MB và tự giảm kích thước bitmap trước khi hiển thị; ảnh tải trực tiếp lên Firebase Console có giới hạn 300 KB.
-
-Ví dụ request body cho FCM HTTP v1:
+Response `200 OK`:
 
 ```json
 {
-  "message": {
-    "token": "FCM_TOKEN_HIEN_THI_TRONG_APP",
-    "data": {
-      "title": "Trading alert",
-      "body": "BTCUSDT đã chạm mức 70,000",
-      "reference": "btc-70000",
-      "image": "https://example.com/images/btc-alert.jpg"
-    },
-    "android": {
-      "priority": "HIGH",
-      "ttl": "60s"
-    }
+  "topic": "trading_alerts",
+  "firebase": {
+    "androidPackageName": "com.tradingalert.receiver",
+    "projectId": "example-project",
+    "applicationId": "1:1234567890:android:abcdef123456",
+    "apiKey": "example-android-api-key",
+    "gcmSenderId": "1234567890",
+    "storageBucket": "example-project.firebasestorage.app"
   }
 }
 ```
 
-Nếu cần gửi payload dạng notification chuẩn, trường ảnh nằm trong `message.notification`:
+Yêu cầu:
+
+- Endpoint phải dùng HTTPS.
+- `androidPackageName` phải bằng `com.tradingalert.receiver`.
+- `projectId`, `applicationId`, `apiKey`, `gcmSenderId` và `topic` không được trống.
+- `storageBucket` có thể để trống.
+- Topic phải khớp `^[a-zA-Z0-9-_.~%]{1,900}$`.
+- Response tối đa 8 KiB; timeout phía app là 5 giây.
+- Khi topic thay đổi, app tự subscribe topic mới và bỏ topic cũ.
+
+Các giá trị trên là Firebase client config công khai. Không trả `client_email`, `private_key`, service-account JSON hoặc OAuth token về app.
+
+### Nhận webhook TradingView
+
+Endpoint đề xuất:
+
+```http
+POST /webhooks/tradingview
+Content-Type: application/json
+```
+
+Payload mẫu:
+
+```json
+{
+  "secret": "WEBHOOK_SECRET_VALUE",
+  "eventId": "{{ticker}}-{{timenow}}-{{strategy.order.id}}",
+  "symbol": "{{ticker}}",
+  "action": "{{strategy.order.action}}",
+  "price": "{{strategy.order.price}}",
+  "quantity": "{{strategy.order.contracts}}",
+  "time": "{{timenow}}",
+  "image": "https://cdn.example.com/trading-alert.jpg"
+}
+```
+
+Backend phải xác thực webhook secret, chống gửi trùng bằng `eventId` và phản hồi nhanh. IP allowlist và giới hạn body là cấu hình vận hành của backend, không phải hằng số của app.
+
+### Gửi FCM
+
+Gửi bằng Firebase HTTP v1:
+
+```http
+POST https://fcm.googleapis.com/v1/projects/FIREBASE_PROJECT_ID/messages:send
+Authorization: Bearer OAUTH2_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Payload khuyến nghị:
 
 ```json
 {
   "message": {
-    "token": "FCM_TOKEN",
+    "topic": "trading_alerts",
     "notification": {
-      "title": "Trading alert",
-      "body": "BTCUSDT đã chạm mức 70,000",
-      "image": "https://example.com/images/btc-alert.jpg"
+      "title": "BTCUSDT • BUY",
+      "body": "@70500 • × 0.01",
+      "image": "https://cdn.example.com/trading-alert.jpg"
+    },
+    "data": {
+      "title": "BTCUSDT • BUY",
+      "body": "@70500 • × 0.01",
+      "reference": "order-42",
+      "image": "https://cdn.example.com/trading-alert.jpg"
     },
     "android": {
       "priority": "HIGH",
+      "ttl": "60s",
       "notification": {
-        "channel_id": "trading_alerts_v5"
+        "channel_id": "trading_alerts_v5",
+        "sound": "default"
       }
     }
   }
 }
 ```
 
-Payload notification phù hợp để gửi thử từ Firebase Console. Với server thật, payload chỉ `data` ở ví dụ đầu là lựa chọn ổn định hơn cho các tính năng riêng của ứng dụng.
+Mọi giá trị trong `data` phải là chuỗi. App hỗ trợ `title`, `body`, `reference` và các key ảnh `image`, `image_url`, `imageUrl`, `picture`.
 
-Endpoint:
+`trading_alerts_v5` là Android notification channel, không phải FCM topic.
 
-```text
-POST https://fcm.googleapis.com/v1/projects/PROJECT_ID/messages:send
-Authorization: Bearer OAUTH2_ACCESS_TOKEN
-Content-Type: application/json
-```
+## Cấu hình backend
 
-OAuth2 access token phải được tạo trên server tin cậy bằng service account. Không nhúng service-account JSON hoặc server credential vào ứng dụng Android.
+| Biến | Mục đích |
+| --- | --- |
+| `FIREBASE_PROJECT_ID` | Firebase project dùng để gửi FCM |
+| `FIREBASE_CLIENT_EMAIL` | Service-account email |
+| `FIREBASE_PRIVATE_KEY` | Service-account private key |
+| `FIREBASE_ANDROID_APP_ID` | Android Firebase application ID |
+| `FIREBASE_ANDROID_API_KEY` | Android Firebase client API key |
+| `FIREBASE_SENDER_ID` | Firebase project number / sender ID |
+| `FIREBASE_STORAGE_BUCKET` | Storage bucket, có thể để trống |
+| `ANDROID_PACKAGE_NAME` | Phải là `com.tradingalert.receiver` |
+| `FCM_TOPIC` | Topic trả về app và dùng để gửi FCM |
+| `WEBHOOK_SECRET` | Xác thực webhook TradingView |
 
-## Cấu trúc chính
+`FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` và `WEBHOOK_SECRET` phải được lưu bằng secret manager, không commit vào Git.
 
-```text
-app/src/main/
-├── AndroidManifest.xml
-├── java/com/tradingalert/receiver/
-│   ├── TradingAlertReceiverApplication.kt
-│   ├── data/notification/
-│   │   ├── NotificationDao.kt
-│   │   ├── NotificationDatabase.kt
-│   │   ├── NotificationEntity.kt
-│   │   ├── NotificationHistoryItem.kt
-│   │   └── NotificationHistoryRepository.kt
-│   ├── messaging/
-│   │   ├── AlertMessagingService.kt
-│   │   ├── NotificationHelper.kt
-│   │   ├── NotificationImageWorker.kt
-│   │   └── PushMessage.kt
-│   └── ui/
-│       ├── alertreceiver/
-│       └── theme/Theme.kt
-└── res/
-    ├── drawable/
-    ├── drawable-nodpi/
-    ├── mipmap-*/
-    └── values/
-```
+Mã Cloudflare Worker trong [`worker/`](worker/) chỉ là triển khai tham khảo để người làm backend hoàn thiện sau.
 
-Lịch sử thông báo được lưu trong Room database `trading_alert_receiver.db`, tối đa 50 bản ghi. `SharedPreferences` chỉ dùng cho các giá trị nhỏ như FCM token, ngôn ngữ, âm lượng và thời lượng chuông.
+## Kiểm tra tích hợp
 
-## Xử lý sự cố
+1. `GET /config` trả đúng Firebase project, package và topic.
+2. Cài app, mở một lần và cấp quyền thông báo.
+3. App hiển thị trạng thái `LIVE`.
+4. Gửi webhook thử.
+5. Kiểm tra notification, âm thanh, ảnh và lịch sử trong app.
+6. Thử lại khi app chạy nền.
 
-### Không có cấu hình `app` hoặc nút Run bị mờ
+Nếu người dùng bấm **Force stop** trong Android Settings, Android có thể ngừng giao FCM cho đến khi app được mở lại.
 
-- Đóng project hiện tại.
-- Mở lại thư mục gốc `D:\app`, không mở thư mục module `D:\app\app`.
-- Chạy **Sync Project with Gradle Files**.
-- Kiểm tra Gradle JDK đang dùng JDK 17 trở lên.
+## Tài liệu chính thức
 
-### Không lấy được FCM token
-
-- Kiểm tra `app/google-services.json` tồn tại.
-- Kiểm tra package trong Firebase là `com.tradingalert.receiver`.
-- Kiểm tra thiết bị có Google Play services và có kết nối Internet.
-- Clean, gỡ bản cũ rồi cài lại app.
-
-### Nhận notification nhưng không có âm thanh
-
-- Kiểm tra quyền thông báo của ứng dụng.
-- Kiểm tra âm thanh của channel **Cảnh báo Firebase**.
-- Tắt chế độ Không làm phiền nếu đang bật.
-- Kiểm tra tối ưu pin và quyền tự khởi động trên điện thoại Xiaomi, Oppo, Vivo, Huawei hoặc Samsung.
-
-### App không nhận push sau khi Force stop
-
-Đây là hành vi của Android. Người dùng cần mở lại app ít nhất một lần trước khi hệ thống tiếp tục giao FCM.
-
-## Lưu ý vận hành
-
-- Người dùng có thể thay đổi hoặc tắt âm thanh notification channel trong cài đặt hệ thống; ứng dụng không thể tự ghi đè lựa chọn đó.
-- FCM high priority chỉ nên dùng cho tín hiệu cần người dùng chú ý ngay. Lạm dụng có thể khiến hệ thống hạ mức ưu tiên.
-- FCM không cam kết thời gian giao tuyệt đối; không dùng ứng dụng như hệ thống cảnh báo an toàn sinh mạng hoặc giao dịch bắt buộc thời gian thực.
-
-## Tài liệu tham khảo
-
-- [Thiết lập Firebase cho Android](https://firebase.google.com/docs/android/setup)
+- [Firebase HTTP v1](https://firebase.google.com/docs/cloud-messaging/send/v1-api)
 - [Nhận FCM trên Android](https://firebase.google.com/docs/cloud-messaging/android/receive-messages)
-- [Gửi FCM bằng HTTP v1](https://firebase.google.com/docs/cloud-messaging/send-message)
-- [Cấu hình nhiều Firebase project](https://firebase.google.com/docs/projects/multiprojects)
+- [Cloudflare Workers secrets](https://developers.cloudflare.com/workers/configuration/secrets/)
+- [TradingView webhook alerts](https://www.tradingview.com/support/solutions/43000529348-how-to-configure-webhook-alerts/)

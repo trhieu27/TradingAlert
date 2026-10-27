@@ -5,18 +5,14 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
-val googleServicesConfig = file("google-services.json")
-val hasValidGoogleServicesConfig = googleServicesConfig.isFile &&
-    googleServicesConfig.length() > 0L &&
-    runCatching {
-        groovy.json.JsonSlurper().parse(googleServicesConfig)
-    }.isSuccess
-
-if (hasValidGoogleServicesConfig) {
-    apply(plugin = "com.google.gms.google-services")
-} else {
-    logger.warn("app/google-services.json is missing or invalid; use the in-app Firebase configuration editor.")
-}
+val workerBaseUrl = providers.gradleProperty("WORKER_BASE_URL")
+    .orElse(providers.environmentVariable("WORKER_BASE_URL"))
+    .orElse("")
+    .get()
+    .trimEnd('/')
+val escapedWorkerBaseUrl = workerBaseUrl
+    .replace("\\", "\\\\")
+    .replace("\"", "\\\"")
 
 android {
     namespace = "com.tradingalert.receiver"
@@ -28,6 +24,8 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
+
+        buildConfigField("String", "WORKER_BASE_URL", "\"$escapedWorkerBaseUrl\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
