@@ -177,7 +177,7 @@ private fun NotificationHistoryButton(
 ) {
     IconButton(
         onClick = onClick,
-        modifier = Modifier.size(48.dp),
+        modifier = Modifier.size(40.dp),
     ) {
         BadgedBox(
             badge = {
@@ -214,7 +214,7 @@ private fun LanguageToggleButton(
     IconButton(
         onClick = { onLanguageSelected(nextLanguage) },
         modifier = Modifier
-            .size(48.dp)
+            .size(40.dp)
             .semantics {
                 contentDescription = switchDescription
             },

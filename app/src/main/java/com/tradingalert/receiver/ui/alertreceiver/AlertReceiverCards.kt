@@ -1,7 +1,6 @@
 package com.tradingalert.receiver.ui.alertreceiver
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -33,6 +32,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -344,107 +344,116 @@ internal fun DeviceReliabilityCards(
     onOpenBackgroundDataSettings: () -> Unit,
     onOpenAutoStartSettings: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        if (state.batteryOptimizationRequired) {
-            DeviceSettingCard(
+    val settings = buildList {
+        if (state.batteryOptimizationRequired) add(
+            DeviceSettingItem(
                 icon = Icons.Rounded.BatteryAlert,
                 title = stringResource(R.string.battery_optimization_title),
                 body = stringResource(R.string.battery_optimization_body),
                 onClick = onOpenBatteryOptimizationSettings,
-            )
-        }
-        if (state.backgroundActivityRestricted) {
-            DeviceSettingCard(
+            ),
+        )
+        if (state.backgroundActivityRestricted) add(
+            DeviceSettingItem(
                 icon = Icons.Rounded.PauseCircle,
                 title = stringResource(R.string.background_activity_title),
                 body = stringResource(R.string.background_activity_body),
                 onClick = onOpenBackgroundActivitySettings,
-            )
-        }
-        if (state.backgroundDataRestricted) {
-            DeviceSettingCard(
+            ),
+        )
+        if (state.backgroundDataRestricted) add(
+            DeviceSettingItem(
                 icon = Icons.Rounded.DataUsage,
                 title = stringResource(R.string.background_data_title),
                 body = stringResource(R.string.background_data_body),
                 onClick = onOpenBackgroundDataSettings,
-            )
-        }
-        if (state.autoStartSettingsAvailable) {
-            DeviceSettingCard(
+            ),
+        )
+        if (state.autoStartSettingsAvailable) add(
+            DeviceSettingItem(
                 icon = Icons.Rounded.PlayCircle,
                 title = stringResource(R.string.auto_start_title),
                 body = stringResource(R.string.auto_start_body),
                 onClick = onOpenAutoStartSettings,
-            )
+            ),
+        )
+    }
+    if (settings.isEmpty()) return
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Column {
+            settings.forEachIndexed { index, setting ->
+                if (index > 0) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+                    )
+                }
+                DeviceSettingSection(setting)
+            }
         }
     }
 }
 
+private data class DeviceSettingItem(
+    val icon: ImageVector,
+    val title: String,
+    val body: String,
+    val onClick: () -> Unit,
+)
+
 @Composable
-private fun DeviceSettingCard(
-    icon: ImageVector,
-    title: String,
-    body: String,
-    onClick: () -> Unit,
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.8f),
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-    ) {
-        Column(Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.Top) {
-                Surface(
-                    modifier = Modifier.size(36.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.72f),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.size(19.dp),
-                        )
-                    }
-                }
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        text = title,
-                        fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.titleSmall,
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = body,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            Spacer(Modifier.height(12.dp))
-            OutlinedButton(
-                onClick = onClick,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 46.dp),
-                shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
-                ),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary,
-                ),
+private fun DeviceSettingSection(setting: DeviceSettingItem) {
+    Column(Modifier.padding(16.dp)) {
+        Row(verticalAlignment = Alignment.Top) {
+            Surface(
+                modifier = Modifier.size(36.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.72f),
             ) {
-                Text(stringResource(R.string.open_device_setting))
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = setting.icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(19.dp),
+                    )
+                }
             }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = setting.title,
+                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = setting.body,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        OutlinedButton(
+            onClick = setting.onClick,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 46.dp),
+            shape = RoundedCornerShape(14.dp),
+            border = BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
+            ),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.primary,
+            ),
+        ) {
+            Text(stringResource(R.string.open_device_setting))
         }
     }
 }

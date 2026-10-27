@@ -18,6 +18,7 @@
         <activity
             android:name=".ui.alertreceiver.AlertReceiverActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
