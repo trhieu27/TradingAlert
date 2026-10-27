@@ -202,6 +202,7 @@ private fun AlertReceiverRoute(
             tokenUpdatedAt = maxOf(state.tokenUpdatedAt, persisted.tokenUpdatedAt),
             tokenRefreshing = state.tokenRefreshing,
             historyLoading = state.historyLoading,
+            notificationHistory = state.notificationHistory,
         )
     }
 
