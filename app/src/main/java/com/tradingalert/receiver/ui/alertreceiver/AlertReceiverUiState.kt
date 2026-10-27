@@ -7,6 +7,7 @@ import com.tradingalert.receiver.messaging.AlertMessagingService
 import com.tradingalert.receiver.messaging.AlertPreferenceStore
 import com.tradingalert.receiver.messaging.NotificationHelper
 import com.tradingalert.receiver.data.notification.NotificationHistoryItem
+import com.tradingalert.receiver.data.notification.NotificationReadState
 
 internal data class AlertReceiverUiState(
     val notificationsAllowed: Boolean = false,
@@ -22,10 +23,19 @@ internal data class AlertReceiverUiState(
     val backgroundDataRestricted: Boolean = false,
     val autoStartSettingsAvailable: Boolean = false,
     val notificationHistory: List<NotificationHistoryItem> = emptyList(),
+    val lastReadNotificationId: Long = 0L,
     val lastTitle: String? = null,
     val lastBody: String? = null,
     val lastTime: Long = 0L,
-)
+) {
+    val unreadNotificationCount: Int
+        get() {
+            val newestId = notificationHistory.maxOfOrNull(NotificationHistoryItem::id)
+                ?: return 0
+            if (lastReadNotificationId > newestId) return notificationHistory.size
+            return notificationHistory.count { it.id > lastReadNotificationId }
+        }
+}
 
 internal fun loadAlertReceiverState(context: Context): AlertReceiverUiState {
     val prefs = context.getSharedPreferences(AlertMessagingService.PREFS_NAME, Context.MODE_PRIVATE)
@@ -43,6 +53,7 @@ internal fun loadAlertReceiverState(context: Context): AlertReceiverUiState {
         backgroundActivityRestricted = DeviceReliabilitySettings.isBackgroundActivityRestricted(context),
         backgroundDataRestricted = DeviceReliabilitySettings.isBackgroundDataRestricted(context),
         autoStartSettingsAvailable = DeviceReliabilitySettings.hasAutoStartSettings(context),
+        lastReadNotificationId = NotificationReadState.lastReadId(context),
         lastTitle = prefs.getString(AlertMessagingService.KEY_LAST_TITLE, null),
         lastBody = prefs.getString(AlertMessagingService.KEY_LAST_BODY, null),
         lastTime = prefs.getLong(AlertMessagingService.KEY_LAST_TIME, 0L),

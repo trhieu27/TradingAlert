@@ -43,6 +43,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.google.firebase.messaging.FirebaseMessaging
 import com.tradingalert.receiver.R
 import com.tradingalert.receiver.data.notification.NotificationHistoryRepository
+import com.tradingalert.receiver.data.notification.NotificationReadState
 import com.tradingalert.receiver.firebase.FirebaseRuntimeConfig
 import com.tradingalert.receiver.localization.AppLanguage
 import com.tradingalert.receiver.localization.AppLanguageManager
@@ -351,6 +352,11 @@ private fun AlertReceiverRoute(
                         DeviceReliabilitySettings.openAutoStartSettings(activity)
                     },
                     onOpenNotificationHistory = dropUnlessResumed {
+                        val latestNotificationId = state.notificationHistory
+                            .maxOfOrNull { it.id }
+                            ?: 0L
+                        NotificationReadState.markReadThrough(context, latestNotificationId)
+                        state = state.copy(lastReadNotificationId = latestNotificationId)
                         if (backStack.lastOrNull() != NotificationHistoryRoute) {
                             backStack.add(NotificationHistoryRoute)
                         }

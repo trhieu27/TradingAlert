@@ -133,7 +133,7 @@ internal fun AlertReceiverContent(
                         onLanguageSelected = onLanguageSelected,
                     )
                     NotificationHistoryButton(
-                        notificationCount = state.notificationHistory.size,
+                        notificationCount = state.unreadNotificationCount,
                         onClick = onOpenNotificationHistory,
                     )
                 },
