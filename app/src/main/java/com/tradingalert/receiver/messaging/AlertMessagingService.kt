@@ -1,5 +1,6 @@
 package com.tradingalert.receiver.messaging
 
+import android.content.Intent
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -10,36 +11,20 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 
 class AlertMessagingService : FirebaseMessagingService() {
+    override fun handleIntent(intent: Intent) {
+        if (intent.action == ACTION_REMOTE_MESSAGE) {
+            intent.extras?.let { extras ->
+                persistIncomingMessage(RemoteMessage(extras))
+            }
+        }
+        super.handleIntent(intent)
+    }
+
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
-        val payload = remoteMessage.data.toMutableMap().apply {
-            remoteMessage.notification?.title?.let { putIfAbsent("title", it) }
-            remoteMessage.notification?.body?.let { putIfAbsent("body", it) }
-            remoteMessage.notification?.imageUrl?.toString()?.let { putIfAbsent("image", it) }
-        }
-        val localizedContext = AppLanguageManager.localizedContext(this)
-        val message = PushMessage.from(
-            data = payload,
-            defaultTitle = localizedContext.getString(R.string.default_notification_title),
-            defaultBody = localizedContext.getString(R.string.default_notification_body),
-        )
-        val receivedAt = System.currentTimeMillis()
-
-        runBlocking(Dispatchers.IO) {
-            NotificationHistoryRepository.append(
-                context = this@AlertMessagingService,
-                message = message,
-                receivedAt = receivedAt,
-            )
-        }
-
-        getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-            .edit()
-            .putString(KEY_LAST_TITLE, message.title)
-            .putString(KEY_LAST_BODY, message.body)
-            .putLong(KEY_LAST_TIME, receivedAt)
-            .apply()
+        val message = remoteMessage.toPushMessage()
+        persistIncomingMessage(remoteMessage, message)
 
         val notificationId = NotificationHelper.nextId()
         val shown = NotificationHelper.show(
@@ -65,6 +50,49 @@ class AlertMessagingService : FirebaseMessagingService() {
         )
     }
 
+    private fun persistIncomingMessage(
+        remoteMessage: RemoteMessage,
+        message: PushMessage = remoteMessage.toPushMessage(),
+    ) {
+        val messageId = remoteMessage.messageId
+        if (messageId != null && !markForPersistence(messageId)) return
+
+        val receivedAt = System.currentTimeMillis()
+        val persisted = runCatching {
+            runBlocking(Dispatchers.IO) {
+                NotificationHistoryRepository.append(
+                    context = this@AlertMessagingService,
+                    message = message,
+                    receivedAt = receivedAt,
+                )
+            }
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                .edit()
+                .putString(KEY_LAST_TITLE, message.title)
+                .putString(KEY_LAST_BODY, message.body)
+                .putLong(KEY_LAST_TIME, receivedAt)
+                .apply()
+        }.onFailure { error ->
+            Log.e(TAG, "Unable to persist incoming FCM message", error)
+        }.isSuccess
+
+        if (!persisted && messageId != null) forgetPersistenceMark(messageId)
+    }
+
+    private fun RemoteMessage.toPushMessage(): PushMessage {
+        val payload = data.toMutableMap().apply {
+            notification?.title?.let { putIfAbsent("title", it) }
+            notification?.body?.let { putIfAbsent("body", it) }
+            notification?.imageUrl?.toString()?.let { putIfAbsent("image", it) }
+        }
+        val localizedContext = AppLanguageManager.localizedContext(this@AlertMessagingService)
+        return PushMessage.from(
+            data = payload,
+            defaultTitle = localizedContext.getString(R.string.default_notification_title),
+            defaultBody = localizedContext.getString(R.string.default_notification_body),
+        )
+    }
+
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
@@ -84,6 +112,21 @@ class AlertMessagingService : FirebaseMessagingService() {
         const val KEY_LAST_TITLE = "last_title"
         const val KEY_LAST_BODY = "last_body"
         const val KEY_LAST_TIME = "last_time"
+        private const val ACTION_REMOTE_MESSAGE = "com.google.android.c2dm.intent.RECEIVE"
+        private const val MAX_RECENT_MESSAGE_IDS = 20
         private const val TAG = "AlertMessaging"
+        private val recentMessageIds = ArrayDeque<String>()
+
+        private fun markForPersistence(messageId: String): Boolean = synchronized(recentMessageIds) {
+            if (messageId in recentMessageIds) return@synchronized false
+            if (recentMessageIds.size >= MAX_RECENT_MESSAGE_IDS) recentMessageIds.removeFirst()
+            recentMessageIds.addLast(messageId)
+            true
+        }
+
+        private fun forgetPersistenceMark(messageId: String) = synchronized(recentMessageIds) {
+            recentMessageIds.remove(messageId)
+            Unit
+        }
     }
 }

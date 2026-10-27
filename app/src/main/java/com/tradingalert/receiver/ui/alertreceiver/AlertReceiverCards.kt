@@ -4,12 +4,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -31,13 +33,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.tradingalert.receiver.R
 import kotlinx.coroutines.delay
 import java.text.DateFormat
@@ -142,14 +150,27 @@ private fun AlertSettingSlider(
 
 @Composable
 internal fun LastMessageCard(state: AlertReceiverUiState) {
+    val context = LocalContext.current
+    val latestMessage = state.notificationHistory.firstOrNull()
+    val latestTime = latestMessage?.receivedAt ?: 0L
+    val formattedTime = remember(context, latestTime) {
+        if (latestTime <= 0L) {
+            null
+        } else {
+            val receivedAt = Date(latestTime)
+            val date = android.text.format.DateFormat.getMediumDateFormat(context).format(receivedAt)
+            val time = android.text.format.DateFormat.getTimeFormat(context).format(receivedAt)
+            "$date · $time"
+        }
+    }
     val currentTimeMillis by produceState(
         initialValue = System.currentTimeMillis(),
-        key1 = state.lastTime,
+        key1 = latestTime,
     ) {
         while (true) {
             val now = System.currentTimeMillis()
             value = now
-            val elapsed = (now - state.lastTime).coerceAtLeast(0L)
+            val elapsed = (now - latestTime).coerceAtLeast(0L)
             delay(60_000L - elapsed.mod(60_000L))
         }
     }
@@ -171,7 +192,7 @@ internal fun LastMessageCard(state: AlertReceiverUiState) {
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
-                            imageVector = if (state.lastTitle == null) {
+                            imageVector = if (latestMessage == null) {
                                 Icons.Rounded.CloudOff
                             } else {
                                 Icons.Rounded.NotificationsActive
@@ -192,7 +213,7 @@ internal fun LastMessageCard(state: AlertReceiverUiState) {
                     Spacer(Modifier.height(4.dp))
                     Text(
                         stringResource(
-                            if (state.lastTitle == null) {
+                            if (latestMessage == null) {
                                 R.string.latest_signal_empty_subtitle
                             } else {
                                 R.string.latest_signal_received_subtitle
@@ -202,13 +223,13 @@ internal fun LastMessageCard(state: AlertReceiverUiState) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                if (state.lastTime > 0) {
+                if (latestTime > 0) {
                     Surface(
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.72f),
                     ) {
                         Text(
-                            text = relativeTimeText(state.lastTime, currentTimeMillis),
+                            text = relativeTimeText(latestTime, currentTimeMillis),
                             modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
@@ -223,25 +244,55 @@ internal fun LastMessageCard(state: AlertReceiverUiState) {
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
             ) {
-                Column(Modifier.padding(14.dp)) {
-                    if (state.lastTitle == null) {
+                if (latestMessage == null) {
+                    Column(Modifier.padding(14.dp)) {
                         Text(
                             stringResource(R.string.latest_signal_empty_body),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyMedium,
                         )
-                    } else {
-                        Text(
-                            state.lastTitle,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        state.lastBody?.let {
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.Top,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                latestMessage.title,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
                             Spacer(Modifier.height(6.dp))
                             Text(
-                                it,
+                                latestMessage.body,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodyMedium,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            formattedTime?.let { receivedTime ->
+                                Spacer(Modifier.height(10.dp))
+                                Text(
+                                    text = receivedTime,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+                        latestMessage.imageUrl?.let { imageUrl ->
+                            Spacer(Modifier.width(12.dp))
+                            AsyncImage(
+                                model = imageUrl,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxWidth(0.25f)
+                                    .widthIn(max = 84.dp)
+                                    .aspectRatio(1f)
+                                    .clip(RoundedCornerShape(12.dp)),
                             )
                         }
                     }
