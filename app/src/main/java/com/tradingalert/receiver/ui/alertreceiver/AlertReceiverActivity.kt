@@ -35,8 +35,14 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.dropUnlessResumed
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
 import com.google.firebase.messaging.FirebaseMessaging
 import com.tradingalert.receiver.R
+import com.tradingalert.receiver.data.notification.NotificationHistoryRepository
 import com.tradingalert.receiver.localization.AppLanguage
 import com.tradingalert.receiver.localization.AppLanguageManager
 import com.tradingalert.receiver.messaging.AlertMessagingService
@@ -45,8 +51,16 @@ import com.tradingalert.receiver.messaging.NotificationHelper
 import com.tradingalert.receiver.ui.theme.TradingAlertReceiverTheme
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+
+@Serializable
+private data object AlertHomeRoute : NavKey
+
+@Serializable
+private data object NotificationHistoryRoute : NavKey
 
 class AlertReceiverActivity : ComponentActivity() {
     private var notificationSettingsWatcher: Job? = null
@@ -230,6 +244,12 @@ private fun AlertReceiverRoute(
             }
     }
 
+    LaunchedEffect(context) {
+        NotificationHistoryRepository.observe(context).collectLatest { history ->
+            state = state.copy(notificationHistory = history)
+        }
+    }
+
     DisposableEffect(context) {
         val preferences = context.getSharedPreferences(AlertMessagingService.PREFS_NAME, Context.MODE_PRIVATE)
         val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
@@ -252,36 +272,64 @@ private fun AlertReceiverRoute(
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { refresh() }
 
-    AlertReceiverContent(
-        state = state,
-        selectedLanguage = selectedLanguage,
-        snackbarHostState = snackbarHostState,
-        onLanguageSelected = onLanguageSelected,
-        onRequestPermission = {
-            if (
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
-                android.content.pm.PackageManager.PERMISSION_GRANTED
-            ) {
-                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            } else if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) {
-                activity.openNotificationSettings()
+    val backStack = rememberNavBackStack(AlertHomeRoute)
+    val navigateBack: () -> Unit = { backStack.removeLastOrNull() }
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = {
+            if (backStack.size > 1) {
+                navigateBack()
             } else {
-                NotificationHelper.createChannel(context)
-                activity.startActivity(alertSoundSettingsIntent(context))
+                activity.finish()
             }
         },
-        onVolumeChange = { volumePercent ->
-            AlertPreferenceStore.setVolumePercent(context, volumePercent)
-            state = state.copy(alertVolumePercent = volumePercent)
-        },
-        onSoundDurationChange = { durationSeconds ->
-            AlertPreferenceStore.setSoundDurationSeconds(context, durationSeconds)
-            state = state.copy(soundDurationSeconds = durationSeconds)
-        },
-        onOpenSoundSettings = {
-            NotificationHelper.createChannel(context)
-            activity.startActivity(alertSoundSettingsIntent(context))
+        entryProvider = entryProvider {
+            entry<AlertHomeRoute> {
+                AlertReceiverContent(
+                    state = state,
+                    selectedLanguage = selectedLanguage,
+                    snackbarHostState = snackbarHostState,
+                    onLanguageSelected = onLanguageSelected,
+                    onRequestPermission = {
+                        if (
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                            context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
+                            android.content.pm.PackageManager.PERMISSION_GRANTED
+                        ) {
+                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        } else if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+                            activity.openNotificationSettings()
+                        } else {
+                            NotificationHelper.createChannel(context)
+                            activity.startActivity(alertSoundSettingsIntent(context))
+                        }
+                    },
+                    onVolumeChange = { volumePercent ->
+                        AlertPreferenceStore.setVolumePercent(context, volumePercent)
+                        state = state.copy(alertVolumePercent = volumePercent)
+                    },
+                    onSoundDurationChange = { durationSeconds ->
+                        AlertPreferenceStore.setSoundDurationSeconds(context, durationSeconds)
+                        state = state.copy(soundDurationSeconds = durationSeconds)
+                    },
+                    onOpenSoundSettings = {
+                        NotificationHelper.createChannel(context)
+                        activity.startActivity(alertSoundSettingsIntent(context))
+                    },
+                    onOpenNotificationHistory = dropUnlessResumed {
+                        if (backStack.lastOrNull() != NotificationHistoryRoute) {
+                            backStack.add(NotificationHistoryRoute)
+                        }
+                    },
+                )
+            }
+            entry<NotificationHistoryRoute> {
+                NotificationHistoryScreen(
+                    items = state.notificationHistory,
+                    onBack = navigateBack,
+                )
+            }
         },
     )
 }

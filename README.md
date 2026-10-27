@@ -110,13 +110,20 @@ app\build\outputs\apk\debug\app-debug.apk
 
 1. Cài và mở ứng dụng.
 2. Cấp quyền thông báo khi được yêu cầu.
-3. Nhấn **Thử thông báo và âm thanh**.
-4. Nếu không có âm thanh, nhấn **Âm thanh riêng của app** và bật kênh **Cảnh báo giao dịch**. Màn hình này chỉ thay đổi channel của Trading Alert Receiver, không đổi âm thanh notification của ứng dụng khác.
-5. Sao chép FCM token để gửi thử từ server hoặc Firebase.
+3. Nếu không có âm thanh, nhấn **Cài đặt thông báo hệ thống** và bật kênh **Cảnh báo giao dịch**. Màn hình này chỉ thay đổi channel của Trading Alert Receiver, không đổi âm thanh notification của ứng dụng khác.
+4. Lấy FCM token của thiết bị và gửi thử từ Firebase Console hoặc server.
 
-## Payload FCM khuyến nghị
+## Các loại payload FCM được hỗ trợ
 
-Để `AlertMessagingService.onMessageReceived()` xử lý tin nhắn khi app ở nền, server nên gửi **data message** với Android priority `HIGH`. Không thêm trường `notification` nếu muốn app luôn tự tạo notification.
+| Payload | App đang mở | App chạy nền | Lịch sử, âm thanh và ảnh do app xử lý |
+| --- | --- | --- | --- |
+| Chỉ `data` | App xử lý | App xử lý | Có |
+| Chỉ `notification` | App xử lý | Firebase/Android tự hiển thị | Chỉ khi app đang mở |
+| `notification` + `data` | App xử lý | Firebase/Android tự hiển thị; `data` được giao khi người dùng chạm | Chỉ khi app đang mở |
+
+Để thông báo luôn đi qua `AlertMessagingService`, được lưu vào lịch sử và dùng âm thanh riêng của app, server nên gửi **data message** với Android priority `HIGH`. Không thêm trường `notification`.
+
+Ảnh phải dùng URL HTTPS công khai. App nhận các key `image`, `image_url`, `imageUrl` hoặc `picture`; nên dùng `image`. Nếu ảnh tải thất bại, thông báo chữ vẫn được hiển thị. App giới hạn tải tối đa 12 MB và tự giảm kích thước bitmap trước khi hiển thị; ảnh tải trực tiếp lên Firebase Console có giới hạn 300 KB.
 
 Ví dụ request body cho FCM HTTP v1:
 
@@ -127,7 +134,8 @@ Ví dụ request body cho FCM HTTP v1:
     "data": {
       "title": "Trading alert",
       "body": "BTCUSDT đã chạm mức 70,000",
-      "reference": "btc-70000"
+      "reference": "btc-70000",
+      "image": "https://example.com/images/btc-alert.jpg"
     },
     "android": {
       "priority": "HIGH",
@@ -136,6 +144,29 @@ Ví dụ request body cho FCM HTTP v1:
   }
 }
 ```
+
+Nếu cần gửi payload dạng notification chuẩn, trường ảnh nằm trong `message.notification`:
+
+```json
+{
+  "message": {
+    "token": "FCM_TOKEN",
+    "notification": {
+      "title": "Trading alert",
+      "body": "BTCUSDT đã chạm mức 70,000",
+      "image": "https://example.com/images/btc-alert.jpg"
+    },
+    "android": {
+      "priority": "HIGH",
+      "notification": {
+        "channel_id": "trading_alerts_v3"
+      }
+    }
+  }
+}
+```
+
+Payload notification phù hợp để gửi thử từ Firebase Console. Với server thật, payload chỉ `data` ở ví dụ đầu là lựa chọn ổn định hơn cho các tính năng riêng của ứng dụng.
 
 Endpoint:
 
@@ -153,19 +184,29 @@ OAuth2 access token phải được tạo trên server tin cậy bằng service 
 app/src/main/
 ├── AndroidManifest.xml
 ├── java/com/tradingalert/receiver/
-│   ├── MainActivity.kt
 │   ├── TradingAlertReceiverApplication.kt
+│   ├── data/notification/
+│   │   ├── NotificationDao.kt
+│   │   ├── NotificationDatabase.kt
+│   │   ├── NotificationEntity.kt
+│   │   ├── NotificationHistoryItem.kt
+│   │   └── NotificationHistoryRepository.kt
 │   ├── messaging/
 │   │   ├── AlertMessagingService.kt
 │   │   ├── NotificationHelper.kt
+│   │   ├── NotificationImageWorker.kt
 │   │   └── PushMessage.kt
-│   └── ui/theme/Theme.kt
+│   └── ui/
+│       ├── alertreceiver/
+│       └── theme/Theme.kt
 └── res/
     ├── drawable/
     ├── drawable-nodpi/
     ├── mipmap-*/
     └── values/
 ```
+
+Lịch sử thông báo được lưu trong Room database `trading_alert_receiver.db`, tối đa 50 bản ghi. `SharedPreferences` chỉ dùng cho các giá trị nhỏ như FCM token, ngôn ngữ, âm lượng và thời lượng chuông.
 
 ## Xử lý sự cố
 

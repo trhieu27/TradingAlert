@@ -5,6 +5,12 @@
     <string name="app_icon_description">Biểu tượng Trading Alert</string>
     <string name="switch_to_english">Chuyển sang English</string>
     <string name="switch_to_vietnamese">Chuyển sang Tiếng Việt</string>
+    <string name="notification_history_open">Mở lịch sử thông báo</string>
+    <string name="notification_history_title">Lịch sử thông báo</string>
+    <string name="notification_history_empty">Chưa nhận được thông báo nào.</string>
+    <string name="expand_notification_image">Mở ảnh thông báo</string>
+    <string name="collapse_notification_image">Thu gọn ảnh thông báo</string>
+    <string name="back">Quay lại</string>
 
     <string name="connection_title">Kênh tín hiệu trực tiếp</string>
     <string name="connection_subtitle">Đồng bộ Firebase Cloud Messaging</string>

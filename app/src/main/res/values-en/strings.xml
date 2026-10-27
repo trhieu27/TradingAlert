@@ -5,6 +5,12 @@
     <string name="app_icon_description">Trading Alert icon</string>
     <string name="switch_to_english">Switch to English</string>
     <string name="switch_to_vietnamese">Switch to Vietnamese</string>
+    <string name="notification_history_open">Open notification history</string>
+    <string name="notification_history_title">Notification history</string>
+    <string name="notification_history_empty">No notifications received yet.</string>
+    <string name="expand_notification_image">Show notification image</string>
+    <string name="collapse_notification_image">Hide notification image</string>
+    <string name="back">Back</string>
 
     <string name="connection_title">Live signal channel</string>
     <string name="connection_subtitle">Firebase Cloud Messaging sync</string>

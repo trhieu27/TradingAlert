@@ -18,7 +18,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -63,6 +68,7 @@ internal fun AlertReceiverContent(
     onVolumeChange: (Int) -> Unit,
     onSoundDurationChange: (Int) -> Unit,
     onOpenSoundSettings: () -> Unit,
+    onOpenNotificationHistory: () -> Unit,
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -110,6 +116,10 @@ internal fun AlertReceiverContent(
                         selectedLanguage = selectedLanguage,
                         onLanguageSelected = onLanguageSelected,
                     )
+                    NotificationHistoryButton(
+                        notificationCount = state.notificationHistory.size,
+                        onClick = onOpenNotificationHistory,
+                    )
                 },
             )
         },
@@ -144,6 +154,33 @@ internal fun AlertReceiverContent(
                     onOpenSoundSettings = onOpenSoundSettings,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun NotificationHistoryButton(
+    notificationCount: Int,
+    onClick: () -> Unit,
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier.size(48.dp),
+    ) {
+        BadgedBox(
+            badge = {
+                if (notificationCount > 0) {
+                    Badge {
+                        Text(if (notificationCount > 99) "99+" else notificationCount.toString())
+                    }
+                }
+            },
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Notifications,
+                contentDescription = stringResource(R.string.notification_history_open),
+                modifier = Modifier.size(26.dp),
+            )
         }
     }
 }
@@ -332,6 +369,7 @@ internal fun AlertReceiverContentPreview() {
             onVolumeChange = {},
             onSoundDurationChange = {},
             onOpenSoundSettings = {},
+            onOpenNotificationHistory = {},
         )
     }
 }

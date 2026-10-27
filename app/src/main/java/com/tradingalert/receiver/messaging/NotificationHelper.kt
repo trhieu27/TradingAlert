@@ -8,6 +8,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
@@ -53,7 +54,13 @@ object NotificationHelper {
         notificationManager.createNotificationChannel(channel)
     }
 
-    fun show(context: Context, message: PushMessage, notificationId: Int = nextId()): Boolean {
+    fun show(
+        context: Context,
+        message: PushMessage,
+        notificationId: Int = nextId(),
+        image: Bitmap? = null,
+        playSound: Boolean = true,
+    ): Boolean {
         val notificationManager = NotificationManagerCompat.from(context)
         if (
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -87,20 +94,34 @@ object NotificationHelper {
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(message.title)
             .setContentText(message.body)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(message.body))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_EVENT)
             .setSilent(true)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
+            .apply {
+                if (image == null) {
+                    setStyle(NotificationCompat.BigTextStyle().bigText(message.body))
+                } else {
+                    setLargeIcon(image)
+                    setStyle(
+                        NotificationCompat.BigPictureStyle()
+                            .bigPicture(image)
+                            .setBigContentTitle(message.title)
+                            .setSummaryText(message.body),
+                    )
+                }
+            }
             .build()
 
         notificationManager.notify(notificationId, notification)
-        playAlertSound(
-            context = context,
-            volumePercent = alertPreferences.volumePercent,
-            durationSeconds = alertPreferences.soundDurationSeconds,
-        )
+        if (playSound) {
+            playAlertSound(
+                context = context,
+                volumePercent = alertPreferences.volumePercent,
+                durationSeconds = alertPreferences.soundDurationSeconds,
+            )
+        }
         return true
     }
 
@@ -157,5 +178,5 @@ object NotificationHelper {
         activePlayer = null
     }
 
-    private fun nextId(): Int = (System.currentTimeMillis() and 0x7FFFFFFF).toInt()
+    internal fun nextId(): Int = (System.currentTimeMillis() and 0x7FFFFFFF).toInt()
 }

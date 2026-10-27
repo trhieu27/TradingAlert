@@ -5,6 +5,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.tradingalert.receiver.R
 import com.tradingalert.receiver.messaging.AlertMessagingService
 import com.tradingalert.receiver.messaging.AlertPreferenceStore
+import com.tradingalert.receiver.data.notification.NotificationHistoryItem
 
 internal data class AlertReceiverUiState(
     val notificationsAllowed: Boolean = false,
@@ -13,6 +14,7 @@ internal data class AlertReceiverUiState(
     val tokenRefreshing: Boolean = false,
     val alertVolumePercent: Int = AlertPreferenceStore.DEFAULT_VOLUME_PERCENT,
     val soundDurationSeconds: Int = AlertPreferenceStore.DEFAULT_SOUND_DURATION_SECONDS,
+    val notificationHistory: List<NotificationHistoryItem> = emptyList(),
     val lastTitle: String? = null,
     val lastBody: String? = null,
     val lastTime: Long = 0L,
