@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CloudDone
-import androidx.compose.material.icons.rounded.CloudQueue
 import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -82,7 +81,13 @@ internal fun ConnectionStrip(state: AlertReceiverUiState) {
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    stringResource(R.string.connection_subtitle),
+                    stringResource(
+                        if (state.serverBaseUrl.isNullOrBlank()) {
+                            R.string.connection_backend_required
+                        } else {
+                            R.string.connection_subtitle
+                        },
+                    ),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -98,34 +103,6 @@ internal fun ConnectionStrip(state: AlertReceiverUiState) {
                     fontWeight = FontWeight.SemiBold,
                     color = statusColor,
                 )
-            }
-        }
-    }
-}
-
-@Composable
-internal fun BackendSetupCard(onOpenBackendConfig: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-    ) {
-        Column(Modifier.padding(16.dp)) {
-            SectionTitle(
-                icon = Icons.Rounded.CloudQueue,
-                title = stringResource(R.string.backend_setup_title),
-                subtitle = stringResource(R.string.backend_setup_body),
-            )
-            Spacer(Modifier.height(14.dp))
-            Button(
-                onClick = onOpenBackendConfig,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                shape = RoundedCornerShape(15.dp),
-            ) {
-                Icon(Icons.Rounded.CloudQueue, contentDescription = null, modifier = Modifier.size(19.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.backend_setup_action), fontWeight = FontWeight.SemiBold)
             }
         }
     }

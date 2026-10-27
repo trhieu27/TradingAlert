@@ -163,7 +163,6 @@ internal fun AlertReceiverContent(
                     onOpenBackgroundActivitySettings = onOpenBackgroundActivitySettings,
                     onOpenBackgroundDataSettings = onOpenBackgroundDataSettings,
                     onOpenAutoStartSettings = onOpenAutoStartSettings,
-                    onOpenBackendConfig = onOpenBackendConfig,
                 )
             } else {
                 WideLayout(
@@ -177,7 +176,6 @@ internal fun AlertReceiverContent(
                     onOpenBackgroundActivitySettings = onOpenBackgroundActivitySettings,
                     onOpenBackgroundDataSettings = onOpenBackgroundDataSettings,
                     onOpenAutoStartSettings = onOpenAutoStartSettings,
-                    onOpenBackendConfig = onOpenBackendConfig,
                 )
             }
         }
@@ -318,16 +316,12 @@ internal fun PhoneLayout(
     onOpenBackgroundActivitySettings: () -> Unit,
     onOpenBackgroundDataSettings: () -> Unit,
     onOpenAutoStartSettings: () -> Unit,
-    onOpenBackendConfig: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        if (state.serverBaseUrl.isNullOrBlank()) {
-            item { BackendSetupCard(onOpenBackendConfig) }
-        }
         item { ConnectionStrip(state) }
         if (state.notificationsAllowed) {
             item {
@@ -370,7 +364,6 @@ internal fun WideLayout(
     onOpenBackgroundActivitySettings: () -> Unit,
     onOpenBackgroundDataSettings: () -> Unit,
     onOpenAutoStartSettings: () -> Unit,
-    onOpenBackendConfig: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxSize(),
@@ -385,9 +378,6 @@ internal fun WideLayout(
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            if (state.serverBaseUrl.isNullOrBlank()) {
-                item { BackendSetupCard(onOpenBackendConfig) }
-            }
             item { ConnectionStrip(state) }
             if (!state.notificationsAllowed) item { NotificationPermissionCard(onRequestPermission) }
             item {
