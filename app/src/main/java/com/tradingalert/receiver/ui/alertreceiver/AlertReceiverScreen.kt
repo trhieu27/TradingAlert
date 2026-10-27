@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.rounded.CloudQueue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -72,6 +73,7 @@ internal fun AlertReceiverContent(
     onOpenBackgroundActivitySettings: () -> Unit,
     onOpenBackgroundDataSettings: () -> Unit,
     onOpenAutoStartSettings: () -> Unit,
+    onOpenBackendConfig: () -> Unit,
     onOpenNotificationHistory: () -> Unit,
 ) {
     Scaffold(
@@ -116,6 +118,16 @@ internal fun AlertReceiverContent(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = onOpenBackendConfig,
+                        modifier = Modifier.size(40.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.CloudQueue,
+                            contentDescription = stringResource(R.string.backend_settings_open),
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
                     LanguageToggleButton(
                         selectedLanguage = selectedLanguage,
                         onLanguageSelected = onLanguageSelected,
@@ -151,6 +163,7 @@ internal fun AlertReceiverContent(
                     onOpenBackgroundActivitySettings = onOpenBackgroundActivitySettings,
                     onOpenBackgroundDataSettings = onOpenBackgroundDataSettings,
                     onOpenAutoStartSettings = onOpenAutoStartSettings,
+                    onOpenBackendConfig = onOpenBackendConfig,
                 )
             } else {
                 WideLayout(
@@ -164,6 +177,7 @@ internal fun AlertReceiverContent(
                     onOpenBackgroundActivitySettings = onOpenBackgroundActivitySettings,
                     onOpenBackgroundDataSettings = onOpenBackgroundDataSettings,
                     onOpenAutoStartSettings = onOpenAutoStartSettings,
+                    onOpenBackendConfig = onOpenBackendConfig,
                 )
             }
         }
@@ -304,12 +318,16 @@ internal fun PhoneLayout(
     onOpenBackgroundActivitySettings: () -> Unit,
     onOpenBackgroundDataSettings: () -> Unit,
     onOpenAutoStartSettings: () -> Unit,
+    onOpenBackendConfig: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        if (state.serverBaseUrl.isNullOrBlank()) {
+            item { BackendSetupCard(onOpenBackendConfig) }
+        }
         item { ConnectionStrip(state) }
         if (state.notificationsAllowed) {
             item {
@@ -352,6 +370,7 @@ internal fun WideLayout(
     onOpenBackgroundActivitySettings: () -> Unit,
     onOpenBackgroundDataSettings: () -> Unit,
     onOpenAutoStartSettings: () -> Unit,
+    onOpenBackendConfig: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxSize(),
@@ -366,6 +385,9 @@ internal fun WideLayout(
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            if (state.serverBaseUrl.isNullOrBlank()) {
+                item { BackendSetupCard(onOpenBackendConfig) }
+            }
             item { ConnectionStrip(state) }
             if (!state.notificationsAllowed) item { NotificationPermissionCard(onRequestPermission) }
             item {
@@ -434,6 +456,7 @@ internal fun AlertReceiverContentPreview() {
             onOpenBackgroundActivitySettings = {},
             onOpenBackgroundDataSettings = {},
             onOpenAutoStartSettings = {},
+            onOpenBackendConfig = {},
             onOpenNotificationHistory = {},
         )
     }

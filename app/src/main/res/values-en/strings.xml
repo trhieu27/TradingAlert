@@ -6,6 +6,7 @@
     <string name="switch_to_english">Switch to English</string>
     <string name="switch_to_vietnamese">Switch to Vietnamese</string>
     <string name="notification_history_open">Open notification history</string>
+    <string name="backend_settings_open">Open backend configuration</string>
     <string name="notification_history_title">Notification history</string>
     <string name="notification_history_empty">No notifications received yet.</string>
     <string name="notification_history_loading">Loading notification history…</string>
@@ -37,6 +38,21 @@
     <string name="token_loading">Getting token…</string>
     <string name="token_fetch_failed">No token available. Check Firebase and your network connection.</string>
     <string name="server_config_failed">Unable to load messaging configuration from the server.</string>
+    <string name="server_not_configured">Backend URL is not configured.</string>
+    <string name="backend_setup_title">Connect backend</string>
+    <string name="backend_setup_body">Enter the Cloudflare Worker URL so the app can load its configuration and receive signals.</string>
+    <string name="backend_setup_action">Enter backend URL</string>
+    <string name="backend_config_title">Backend configuration</string>
+    <string name="backend_config_description">Enter the Cloudflare Worker HTTPS origin. The app validates /config before saving.</string>
+    <string name="backend_url_label">Backend URL</string>
+    <string name="backend_url_placeholder">https://worker-name.account.workers.dev</string>
+    <string name="backend_config_endpoint">App configuration: %1$s/config</string>
+    <string name="backend_webhook_endpoint">TradingView webhook: %1$s/webhooks/tradingview</string>
+    <string name="backend_save">Check and save</string>
+    <string name="backend_cancel">Cancel</string>
+    <string name="backend_save_success">Backend connected</string>
+    <string name="backend_save_failed">Unable to connect. Check the URL and /config endpoint.</string>
+    <string name="backend_url_required">Enter the backend URL.</string>
 
     <string name="latest_signal_title">Latest signal</string>
     <string name="latest_signal_empty_subtitle">No data yet</string>

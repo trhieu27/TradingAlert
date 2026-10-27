@@ -6,6 +6,7 @@ import com.tradingalert.receiver.R
 import com.tradingalert.receiver.messaging.AlertMessagingService
 import com.tradingalert.receiver.messaging.AlertPreferenceStore
 import com.tradingalert.receiver.messaging.NotificationHelper
+import com.tradingalert.receiver.messaging.MessagingServerConfig
 import com.tradingalert.receiver.data.notification.NotificationHistoryItem
 import com.tradingalert.receiver.data.notification.NotificationReadState
 
@@ -14,6 +15,7 @@ internal data class AlertReceiverUiState(
     val token: String = "",
     val tokenUpdatedAt: Long = 0L,
     val tokenRefreshing: Boolean = false,
+    val serverBaseUrl: String? = null,
     val historyLoading: Boolean = false,
     val alertVolumePercent: Int = AlertPreferenceStore.DEFAULT_VOLUME_PERCENT,
     val soundDurationSeconds: Int = AlertPreferenceStore.DEFAULT_SOUND_DURATION_SECONDS,
@@ -46,6 +48,7 @@ internal fun loadAlertReceiverState(context: Context): AlertReceiverUiState {
         token = prefs.getString(AlertMessagingService.KEY_TOKEN, null)
             ?: context.getString(R.string.token_loading),
         tokenUpdatedAt = prefs.getLong(AlertMessagingService.KEY_TOKEN_TIME, 0L),
+        serverBaseUrl = MessagingServerConfig.serverBaseUrl(context),
         alertVolumePercent = alertPreferences.volumePercent,
         soundDurationSeconds = alertPreferences.soundDurationSeconds,
         alertSoundName = NotificationHelper.channelSoundName(context),

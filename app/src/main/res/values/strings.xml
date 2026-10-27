@@ -6,6 +6,7 @@
     <string name="switch_to_english">Chuyển sang English</string>
     <string name="switch_to_vietnamese">Chuyển sang Tiếng Việt</string>
     <string name="notification_history_open">Mở lịch sử thông báo</string>
+    <string name="backend_settings_open">Mở cấu hình backend</string>
     <string name="notification_history_title">Lịch sử thông báo</string>
     <string name="notification_history_empty">Chưa nhận được thông báo nào.</string>
     <string name="notification_history_loading">Đang tải lịch sử thông báo…</string>
@@ -37,6 +38,21 @@
     <string name="token_loading">Đang lấy token…</string>
     <string name="token_fetch_failed">Chưa có token. Kiểm tra Firebase và kết nối mạng.</string>
     <string name="server_config_failed">Không tải được cấu hình nhận tin từ server.</string>
+    <string name="server_not_configured">Chưa cấu hình URL backend.</string>
+    <string name="backend_setup_title">Kết nối backend</string>
+    <string name="backend_setup_body">Nhập URL Cloudflare Worker để app lấy cấu hình và nhận tín hiệu.</string>
+    <string name="backend_setup_action">Nhập URL backend</string>
+    <string name="backend_config_title">Cấu hình backend</string>
+    <string name="backend_config_description">Nhập URL gốc HTTPS của Cloudflare Worker. App sẽ kiểm tra endpoint /config trước khi lưu.</string>
+    <string name="backend_url_label">URL backend</string>
+    <string name="backend_url_placeholder">https://ten-worker.tai-khoan.workers.dev</string>
+    <string name="backend_config_endpoint">App lấy cấu hình: %1$s/config</string>
+    <string name="backend_webhook_endpoint">Webhook TradingView: %1$s/webhooks/tradingview</string>
+    <string name="backend_save">Kiểm tra và lưu</string>
+    <string name="backend_cancel">Hủy</string>
+    <string name="backend_save_success">Đã kết nối backend</string>
+    <string name="backend_save_failed">Không thể kết nối. Kiểm tra URL và endpoint /config.</string>
+    <string name="backend_url_required">Hãy nhập URL backend.</string>
 
     <string name="latest_signal_title">Tín hiệu gần nhất</string>
     <string name="latest_signal_empty_subtitle">Chưa có dữ liệu</string>

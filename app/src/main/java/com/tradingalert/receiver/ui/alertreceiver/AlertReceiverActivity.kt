@@ -51,6 +51,7 @@ import com.tradingalert.receiver.messaging.AlertMessagingService
 import com.tradingalert.receiver.messaging.AlertPreferenceStore
 import com.tradingalert.receiver.messaging.MessagingServerConfig
 import com.tradingalert.receiver.messaging.NotificationHelper
+import com.tradingalert.receiver.messaging.ServerMessagingConfig
 import com.tradingalert.receiver.ui.theme.TradingAlertReceiverTheme
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -66,6 +67,9 @@ private data object AlertHomeRoute : NavKey
 
 @Serializable
 private data object NotificationHistoryRoute : NavKey
+
+@Serializable
+private data object BackendConfigRoute : NavKey
 
 class AlertReceiverActivity : ComponentActivity() {
     private var notificationSettingsWatcher: Job? = null
@@ -195,6 +199,10 @@ private fun AlertReceiverRoute(
     val permissionDeniedMessage = stringResource(R.string.notification_permission_denied)
     val tokenFetchFailedMessage = stringResource(R.string.token_fetch_failed)
     val serverConfigFailedMessage = stringResource(R.string.server_config_failed)
+    val serverNotConfiguredMessage = stringResource(R.string.server_not_configured)
+    val backendSaveSuccessMessage = stringResource(R.string.backend_save_success)
+    var backendConfigSaving by remember { mutableStateOf(false) }
+    var backendConfigSaveFailed by remember { mutableStateOf(false) }
 
     fun showMessage(message: String) {
         scope.launch { snackbarHostState.showSnackbar(message) }
@@ -211,11 +219,15 @@ private fun AlertReceiverRoute(
         )
     }
 
-    fun refreshFirebaseToken() {
+    fun refreshFirebaseToken(preloadedConfig: ServerMessagingConfig? = null) {
         state = state.copy(tokenRefreshing = true)
         scope.launch {
-            val config = withContext(Dispatchers.IO) {
-                MessagingServerConfig.fetchAndApply(context)
+            val config = if (preloadedConfig != null) {
+                Result.success(preloadedConfig)
+            } else {
+                withContext(Dispatchers.IO) {
+                    MessagingServerConfig.fetchAndApply(context)
+                }
             }
             if (config.isFailure) {
                 state = state.copy(token = serverConfigFailedMessage, tokenRefreshing = false)
@@ -276,7 +288,11 @@ private fun AlertReceiverRoute(
     }
 
     LaunchedEffect(Unit) {
-        refreshFirebaseToken()
+        if (state.serverBaseUrl.isNullOrBlank()) {
+            state = state.copy(token = serverNotConfiguredMessage, tokenRefreshing = false)
+        } else {
+            refreshFirebaseToken()
+        }
     }
 
     LaunchedEffect(context) {
@@ -382,6 +398,12 @@ private fun AlertReceiverRoute(
                     onOpenAutoStartSettings = {
                         DeviceReliabilitySettings.openAutoStartSettings(activity)
                     },
+                    onOpenBackendConfig = dropUnlessResumed {
+                        backendConfigSaveFailed = false
+                        if (backStack.lastOrNull() != BackendConfigRoute) {
+                            backStack.add(BackendConfigRoute)
+                        }
+                    },
                     onOpenNotificationHistory = dropUnlessResumed {
                         val latestNotificationId = state.notificationHistory
                             .maxOfOrNull { it.id }
@@ -408,6 +430,43 @@ private fun AlertReceiverRoute(
                 NotificationHistoryScreen(
                     items = state.notificationHistory,
                     isLoading = state.historyLoading,
+                    onBack = navigateBack,
+                )
+            }
+            entry<BackendConfigRoute> {
+                UnlockBackNavigationOnResume(
+                    enabled = backNavigationLocked && backUnlockDestination == BackendConfigRoute,
+                    onReady = {
+                        if (backUnlockDestination == BackendConfigRoute) {
+                            backNavigationLocked = false
+                            backUnlockDestination = null
+                        }
+                    },
+                )
+                BackendConfigScreen(
+                    initialUrl = state.serverBaseUrl.orEmpty(),
+                    isSaving = backendConfigSaving,
+                    saveFailed = backendConfigSaveFailed,
+                    onSave = { url ->
+                        backendConfigSaving = true
+                        backendConfigSaveFailed = false
+                        scope.launch {
+                            val result = withContext(Dispatchers.IO) {
+                                MessagingServerConfig.validateAndSaveServer(context, url)
+                            }
+                            backendConfigSaving = false
+                            result.onSuccess { config ->
+                                state = state.copy(
+                                    serverBaseUrl = MessagingServerConfig.serverBaseUrl(context),
+                                )
+                                showMessage(backendSaveSuccessMessage)
+                                navigateBack()
+                                refreshFirebaseToken(config)
+                            }.onFailure {
+                                backendConfigSaveFailed = true
+                            }
+                        }
+                    },
                     onBack = navigateBack,
                 )
             }

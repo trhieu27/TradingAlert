@@ -5,15 +5,6 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
-val workerBaseUrl = providers.gradleProperty("WORKER_BASE_URL")
-    .orElse(providers.environmentVariable("WORKER_BASE_URL"))
-    .orElse("")
-    .get()
-    .trimEnd('/')
-val escapedWorkerBaseUrl = workerBaseUrl
-    .replace("\\", "\\\\")
-    .replace("\"", "\\\"")
-
 android {
     namespace = "com.tradingalert.receiver"
     compileSdk = 36
@@ -24,8 +15,6 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
-
-        buildConfigField("String", "WORKER_BASE_URL", "\"$escapedWorkerBaseUrl\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

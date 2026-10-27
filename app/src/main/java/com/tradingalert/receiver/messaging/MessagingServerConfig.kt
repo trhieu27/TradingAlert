@@ -6,6 +6,7 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.messaging.FirebaseMessaging
 import com.tradingalert.receiver.BuildConfig
+import java.net.URI
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -26,6 +27,7 @@ data class FirebaseClientConfig(
 object MessagingServerConfig {
     private const val CONFIG_PATH = "/config"
     private const val PREFS_NAME = "messaging_server_config"
+    private const val KEY_SERVER_BASE_URL = "server_base_url"
     private const val KEY_CACHED_CONFIG = "cached_config"
     private const val KEY_SUBSCRIBED_TOPIC = "subscribed_topic"
     private const val CONNECT_TIMEOUT_MILLIS = 5_000
@@ -38,9 +40,30 @@ object MessagingServerConfig {
             ?.let { config -> runCatching { applyFirebaseConfig(context, config.firebase) }.isSuccess }
             ?: false
 
+    fun serverBaseUrl(context: Context): String? =
+        preferences(context).getString(KEY_SERVER_BASE_URL, null)
+            ?.takeIf(String::isNotBlank)
+
+    fun validateAndSaveServer(context: Context, input: String): Result<ServerMessagingConfig> =
+        runCatching {
+            val baseUrl = normalizeBaseUrl(input)
+            val config = fetchRemoteConfig(baseUrl)
+            applyFirebaseConfig(context, config.firebase)
+            preferences(context).edit()
+                .putString(KEY_SERVER_BASE_URL, baseUrl)
+                .apply()
+            cacheConfig(context, config)
+            config
+        }.onFailure { error ->
+            Log.e(TAG, "Unable to validate or save messaging server", error)
+        }
+
     fun fetchAndApply(context: Context): Result<ServerMessagingConfig> =
         runCatching {
-            val config = runCatching { fetchRemoteConfig() }
+            val baseUrl = checkNotNull(serverBaseUrl(context)) {
+                "Messaging server URL is not configured"
+            }
+            val config = runCatching { fetchRemoteConfig(baseUrl) }
                 .getOrElse { error -> cachedConfig(context) ?: throw error }
             applyFirebaseConfig(context, config.firebase)
             cacheConfig(context, config)
@@ -67,10 +90,7 @@ object MessagingServerConfig {
         }
     }
 
-    private fun fetchRemoteConfig(): ServerMessagingConfig {
-        val baseUrl = BuildConfig.WORKER_BASE_URL.trim().trimEnd('/')
-        require(baseUrl.startsWith("https://")) { "WORKER_BASE_URL must use HTTPS" }
-
+    private fun fetchRemoteConfig(baseUrl: String): ServerMessagingConfig {
         val connection = (URL(baseUrl + CONFIG_PATH).openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             connectTimeout = CONNECT_TIMEOUT_MILLIS
@@ -159,6 +179,22 @@ object MessagingServerConfig {
 
     private fun preferences(context: Context) =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    private fun normalizeBaseUrl(input: String): String {
+        var value = input.trim().trimEnd('/')
+        if (value.endsWith(CONFIG_PATH)) value = value.removeSuffix(CONFIG_PATH).trimEnd('/')
+        val uri = URI(value)
+        require(uri.scheme.equals("https", ignoreCase = true)) { "Server URL must use HTTPS" }
+        require(!uri.host.isNullOrBlank()) { "Server URL must contain a host" }
+        require(uri.rawQuery == null && uri.rawFragment == null && uri.userInfo == null) {
+            "Server URL must not contain credentials, query, or fragment"
+        }
+        require(uri.path.isNullOrBlank() || uri.path == "/") {
+            "Enter the backend base URL, without an endpoint path"
+        }
+        value = "https://${uri.authority}"
+        return value
+    }
 
     private fun JSONObject.requiredString(name: String): String =
         getString(name).trim().also { value -> require(value.isNotEmpty()) { "$name is required" } }
