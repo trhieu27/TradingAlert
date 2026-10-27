@@ -213,25 +213,45 @@ private fun AlertReceiverRoute(
         )
     }
 
-    fun refreshFirebaseToken() {
+    fun refreshFirebaseToken(forceRenew: Boolean = false) {
         state = state.copy(tokenRefreshing = true)
         runCatching {
             FirebaseRuntimeConfig.ensureDefaultApp(context)
             FirebaseMessaging.getInstance()
         }.onSuccess { messaging ->
-            messaging.token.addOnCompleteListener { task ->
-                state = if (task.isSuccessful) {
-                    val token = task.result
-                    val now = System.currentTimeMillis()
-                    context.getSharedPreferences(AlertMessagingService.PREFS_NAME, Context.MODE_PRIVATE)
-                        .edit()
-                        .putString(AlertMessagingService.KEY_TOKEN, token)
-                        .putLong(AlertMessagingService.KEY_TOKEN_TIME, now)
-                        .apply()
-                    state.copy(token = token, tokenUpdatedAt = now, tokenRefreshing = false)
-                } else {
-                    state.copy(token = tokenFetchFailedMessage, tokenRefreshing = false)
+            fun fetchCurrentToken() {
+                messaging.token.addOnCompleteListener { task ->
+                    state = if (task.isSuccessful) {
+                        val token = task.result
+                        val now = System.currentTimeMillis()
+                        context.getSharedPreferences(
+                            AlertMessagingService.PREFS_NAME,
+                            Context.MODE_PRIVATE,
+                        )
+                            .edit()
+                            .putString(AlertMessagingService.KEY_TOKEN, token)
+                            .putLong(AlertMessagingService.KEY_TOKEN_TIME, now)
+                            .apply()
+                        state.copy(token = token, tokenUpdatedAt = now, tokenRefreshing = false)
+                    } else {
+                        state.copy(token = tokenFetchFailedMessage, tokenRefreshing = false)
+                    }
                 }
+            }
+
+            if (forceRenew) {
+                messaging.deleteToken().addOnCompleteListener { deletionTask ->
+                    if (deletionTask.isSuccessful) {
+                        fetchCurrentToken()
+                    } else {
+                        state = state.copy(
+                            token = tokenFetchFailedMessage,
+                            tokenRefreshing = false,
+                        )
+                    }
+                }
+            } else {
+                fetchCurrentToken()
             }
         }.onFailure {
             state = state.copy(token = firebaseConfigMissingMessage, tokenRefreshing = false)
@@ -411,7 +431,7 @@ private fun AlertReceiverRoute(
                     onSave = { json ->
                         FirebaseRuntimeConfig.saveAndApply(context, json)
                             .map {
-                                refreshFirebaseToken()
+                                refreshFirebaseToken(forceRenew = true)
                                 showMessage(firebaseConfigSavedMessage)
                             }
                     },
