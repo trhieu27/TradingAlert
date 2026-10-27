@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.setContent
@@ -27,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -38,8 +40,8 @@ import com.tradingalert.receiver.R
 import com.tradingalert.receiver.localization.AppLanguage
 import com.tradingalert.receiver.localization.AppLanguageManager
 import com.tradingalert.receiver.messaging.AlertMessagingService
+import com.tradingalert.receiver.messaging.AlertPreferenceStore
 import com.tradingalert.receiver.messaging.NotificationHelper
-import com.tradingalert.receiver.messaging.PushMessage
 import com.tradingalert.receiver.ui.theme.TradingAlertReceiverTheme
 import kotlinx.coroutines.launch
 
@@ -121,23 +123,35 @@ private fun AlertReceiverRoute(
     var state by remember { mutableStateOf(loadAlertReceiverState(context)) }
     val permissionGrantedMessage = stringResource(R.string.notification_permission_granted)
     val permissionDeniedMessage = stringResource(R.string.notification_permission_denied)
+    val notificationSettingsInstruction =
+        stringResource(R.string.notification_settings_instruction)
     val tokenFetchFailedMessage = stringResource(R.string.token_fetch_failed)
     val firebaseConfigMissingMessage = stringResource(R.string.firebase_config_missing)
-    val testNotificationTitle = stringResource(R.string.test_notification_title)
-    val testNotificationBody = stringResource(R.string.test_notification_body)
-    val testAlertSentMessage = stringResource(R.string.test_alert_sent)
-    val notificationPermissionRequiredMessage = stringResource(R.string.notification_permission_required)
 
     fun showMessage(message: String) {
         scope.launch { snackbarHostState.showSnackbar(message) }
     }
 
-    fun refresh() {
+    fun refresh(): AlertReceiverUiState {
         val persisted = loadAlertReceiverState(context)
         state = persisted.copy(
             token = if (isUsableToken(state.token) && !isUsableToken(persisted.token)) state.token else persisted.token,
             tokenUpdatedAt = maxOf(state.tokenUpdatedAt, persisted.tokenUpdatedAt),
             tokenRefreshing = state.tokenRefreshing,
+        )
+        return persisted
+    }
+
+    val notificationSettingsLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) {
+        val refreshedState = refresh()
+        showMessage(
+            if (refreshedState.notificationsAllowed) {
+                permissionGrantedMessage
+            } else {
+                permissionDeniedMessage
+            },
         )
     }
 
@@ -145,7 +159,22 @@ private fun AlertReceiverRoute(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
         refresh()
-        showMessage(if (granted) permissionGrantedMessage else permissionDeniedMessage)
+        when {
+            granted -> showMessage(permissionGrantedMessage)
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                !ActivityCompat.shouldShowRequestPermissionRationale(
+                    activity,
+                    Manifest.permission.POST_NOTIFICATIONS,
+                ) -> {
+                Toast.makeText(
+                    context,
+                    notificationSettingsInstruction,
+                    Toast.LENGTH_LONG,
+                ).show()
+                notificationSettingsLauncher.launch(appNotificationSettingsIntent(context))
+            }
+            else -> showMessage(permissionDeniedMessage)
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -187,6 +216,8 @@ private fun AlertReceiverRoute(
                     AlertMessagingService.KEY_LAST_TITLE,
                     AlertMessagingService.KEY_LAST_BODY,
                     AlertMessagingService.KEY_LAST_TIME,
+                    AlertPreferenceStore.KEY_VOLUME_PERCENT,
+                    AlertPreferenceStore.KEY_SOUND_DURATION_SECONDS,
                 )
             ) {
                 refresh()
@@ -211,22 +242,19 @@ private fun AlertReceiverRoute(
             ) {
                 permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             } else if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) {
-                activity.startActivity(appNotificationSettingsIntent(context))
+                notificationSettingsLauncher.launch(appNotificationSettingsIntent(context))
             } else {
                 NotificationHelper.createChannel(context)
                 activity.startActivity(alertSoundSettingsIntent(context))
             }
         },
-        onTestNotification = {
-            val shown = NotificationHelper.show(
-                context,
-                PushMessage(
-                    title = testNotificationTitle,
-                    body = testNotificationBody,
-                    reference = "local-test",
-                ),
-            )
-            showMessage(if (shown) testAlertSentMessage else notificationPermissionRequiredMessage)
+        onVolumeChange = { volumePercent ->
+            AlertPreferenceStore.setVolumePercent(context, volumePercent)
+            state = state.copy(alertVolumePercent = volumePercent)
+        },
+        onSoundDurationChange = { durationSeconds ->
+            AlertPreferenceStore.setSoundDurationSeconds(context, durationSeconds)
+            state = state.copy(soundDurationSeconds = durationSeconds)
         },
         onOpenSoundSettings = {
             NotificationHelper.createChannel(context)

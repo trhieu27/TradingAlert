@@ -1,4 +1,4 @@
 <resources>
-    <color name="alert_blue">#2854C5</color>
-    <color name="app_window_background">#F4F6F9</color>
+    <color name="alert_blue">#315FC0</color>
+    <color name="app_window_background">#F6F8FC</color>
 </resources>

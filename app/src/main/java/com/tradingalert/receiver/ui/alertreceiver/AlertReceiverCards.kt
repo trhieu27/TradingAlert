@@ -14,12 +14,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
-import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material.icons.rounded.Security
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.rounded.Timer
+import androidx.compose.material.Slider as ClassicSlider
+import androidx.compose.material.SliderDefaults as ClassicSliderDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -38,11 +39,14 @@ import androidx.compose.ui.unit.dp
 import com.tradingalert.receiver.R
 import java.text.DateFormat
 import java.util.Date
+import kotlin.math.roundToInt
 
 @Composable
 internal fun QuickActionsCard(
-    notificationsAllowed: Boolean,
-    onTestNotification: () -> Unit,
+    volumePercent: Int,
+    soundDurationSeconds: Int,
+    onVolumeChange: (Int) -> Unit,
+    onSoundDurationChange: (Int) -> Unit,
     onOpenSoundSettings: () -> Unit,
 ) {
     Card(
@@ -52,21 +56,28 @@ internal fun QuickActionsCard(
     ) {
         Column(Modifier.padding(16.dp)) {
             SectionTitle(
-                Icons.Rounded.Bolt,
-                stringResource(R.string.quick_check_title),
-                stringResource(R.string.quick_check_subtitle),
+                Icons.Rounded.NotificationsActive,
+                stringResource(R.string.alert_settings_title),
+                stringResource(R.string.alert_settings_subtitle),
             )
             Spacer(Modifier.height(14.dp))
-            Button(
-                onClick = onTestNotification,
-                enabled = notificationsAllowed,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                shape = RoundedCornerShape(15.dp),
-            ) {
-                Icon(Icons.Rounded.NotificationsActive, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.send_test_alert))
-            }
+            AlertSettingSlider(
+                icon = Icons.AutoMirrored.Rounded.VolumeUp,
+                title = stringResource(R.string.alert_volume),
+                valueLabel = stringResource(R.string.alert_volume_value, volumePercent),
+                value = volumePercent.toFloat(),
+                valueRange = 0f..100f,
+                onValueChange = { onVolumeChange(((it / 10f).roundToInt() * 10).coerceIn(0, 100)) },
+            )
+            Spacer(Modifier.height(8.dp))
+            AlertSettingSlider(
+                icon = Icons.Rounded.Timer,
+                title = stringResource(R.string.sound_duration),
+                valueLabel = stringResource(R.string.sound_duration_value, soundDurationSeconds),
+                value = soundDurationSeconds.toFloat(),
+                valueRange = 1f..30f,
+                onValueChange = { onSoundDurationChange(it.roundToInt().coerceIn(1, 30)) },
+            )
             Spacer(Modifier.height(10.dp))
             OutlinedButton(
                 onClick = onOpenSoundSettings,
@@ -94,6 +105,51 @@ internal fun QuickActionsCard(
             }
         }
     }
+}
+
+@Composable
+private fun AlertSettingSlider(
+    icon: ImageVector,
+    title: String,
+    valueLabel: String,
+    value: Float,
+    valueRange: ClosedFloatingPointRange<Float>,
+    onValueChange: (Float) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            icon,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+            tint = MaterialTheme.colorScheme.secondary,
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = title,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.labelLarge,
+        )
+        Text(
+            text = valueLabel,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.SemiBold,
+        )
+    }
+    ClassicSlider(
+        value = value,
+        onValueChange = onValueChange,
+        valueRange = valueRange,
+        modifier = Modifier.fillMaxWidth(),
+        colors = ClassicSliderDefaults.colors(
+            thumbColor = MaterialTheme.colorScheme.primary,
+            activeTrackColor = MaterialTheme.colorScheme.primary,
+            inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+    )
 }
 
 @Composable

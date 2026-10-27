@@ -17,11 +17,14 @@
     <string name="status_setup_body">Allow notifications before testing alerts and sound.</string>
     <string name="allow_notifications">Allow notifications</string>
 
-    <string name="quick_check_title">Quick check</string>
-    <string name="quick_check_subtitle">Confirm that alerts work on this device</string>
-    <string name="send_test_alert">Send test alert</string>
-    <string name="app_sound_settings">App-specific sound</string>
-    <string name="channel_security_note">Only the Trading Alerts channel settings are opened; sounds from other apps are not changed.</string>
+    <string name="alert_settings_title">Alert settings</string>
+    <string name="alert_settings_subtitle">Adjust alert volume and sound duration</string>
+    <string name="alert_volume">Alert volume</string>
+    <string name="alert_volume_value">%1$d%%</string>
+    <string name="sound_duration">Sound duration</string>
+    <string name="sound_duration_value">%1$d seconds</string>
+    <string name="app_sound_settings">System notification settings</string>
+    <string name="channel_security_note">The volume and sound duration above only apply to alerts from this app.</string>
 
     <string name="token_loading">Getting token…</string>
     <string name="token_fetch_failed">No token available. Check Firebase and your network connection.</string>
@@ -37,13 +40,10 @@
 
     <string name="notification_permission_granted">Notifications enabled</string>
     <string name="notification_permission_denied">Notification permission was not granted</string>
-    <string name="test_alert_sent">Test alert sent</string>
-    <string name="notification_permission_required">Enable notifications first</string>
-    <string name="test_notification_title">Test signal</string>
-    <string name="test_notification_body">The custom Trading Alert Receiver sound is working.</string>
+    <string name="notification_settings_instruction">Enable notifications, then press Back to return to the app.</string>
 
     <string name="notification_channel_name">Trading alerts</string>
-    <string name="notification_channel_description">Custom sound for Trading Alert Receiver signals</string>
+    <string name="notification_channel_description">Notification channel for Trading Alert Receiver signals</string>
     <string name="default_notification_title">New alert</string>
     <string name="default_notification_body">You have received a new signal.</string>
 

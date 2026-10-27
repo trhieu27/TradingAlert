@@ -17,11 +17,14 @@
     <string name="status_setup_body">Cho phép thông báo trước khi kiểm tra tín hiệu và âm thanh.</string>
     <string name="allow_notifications">Cho phép thông báo</string>
 
-    <string name="quick_check_title">Kiểm tra nhanh</string>
-    <string name="quick_check_subtitle">Xác nhận cảnh báo hoạt động trên thiết bị</string>
-    <string name="send_test_alert">Gửi cảnh báo thử</string>
-    <string name="app_sound_settings">Âm thanh riêng của app</string>
-    <string name="channel_security_note">Chỉ mở cài đặt kênh Cảnh báo giao dịch; âm thanh của app khác không bị thay đổi.</string>
+    <string name="alert_settings_title">Cài đặt cảnh báo</string>
+    <string name="alert_settings_subtitle">Tùy chỉnh âm lượng và thời lượng chuông</string>
+    <string name="alert_volume">Âm lượng cảnh báo</string>
+    <string name="alert_volume_value">%1$d%%</string>
+    <string name="sound_duration">Thời lượng chuông</string>
+    <string name="sound_duration_value">%1$d giây</string>
+    <string name="app_sound_settings">Cài đặt thông báo hệ thống</string>
+    <string name="channel_security_note">Âm lượng và thời lượng chuông bên trên chỉ áp dụng cho cảnh báo của app này.</string>
 
     <string name="token_loading">Đang lấy token…</string>
     <string name="token_fetch_failed">Chưa có token. Kiểm tra Firebase và kết nối mạng.</string>
@@ -37,13 +40,10 @@
 
     <string name="notification_permission_granted">Đã bật thông báo</string>
     <string name="notification_permission_denied">Bạn chưa cấp quyền thông báo</string>
-    <string name="test_alert_sent">Đã gửi cảnh báo thử</string>
-    <string name="notification_permission_required">Hãy cấp quyền thông báo trước</string>
-    <string name="test_notification_title">Tín hiệu thử nghiệm</string>
-    <string name="test_notification_body">Âm thanh riêng của Trading Alert Receiver đang hoạt động.</string>
+    <string name="notification_settings_instruction">Bật quyền Thông báo rồi nhấn Quay lại để trở về app.</string>
 
     <string name="notification_channel_name">Cảnh báo giao dịch</string>
-    <string name="notification_channel_description">Âm thanh riêng cho tín hiệu của Trading Alert Receiver</string>
+    <string name="notification_channel_description">Kênh hiển thị tín hiệu của Trading Alert Receiver</string>
     <string name="default_notification_title">Cảnh báo mới</string>
     <string name="default_notification_body">Bạn vừa nhận được tín hiệu mới.</string>
 

@@ -9,8 +9,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.AudioAttributes
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -18,8 +21,12 @@ import com.tradingalert.receiver.R
 import com.tradingalert.receiver.ui.alertreceiver.AlertReceiverActivity
 
 object NotificationHelper {
-    const val CHANNEL_ID = "trading_alerts_v2"
+    const val CHANNEL_ID = "trading_alerts_v3"
+    private const val PREVIOUS_CHANNEL_ID = "trading_alerts_v2"
     private const val LEGACY_CHANNEL_ID = "firebase_alerts"
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var activePlayer: MediaPlayer? = null
+    private var stopSound: Runnable? = null
 
     fun soundUri(context: Context): Uri = Uri.parse(
         "${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context.packageName}/${R.raw.trading_alert_chime}",
@@ -30,6 +37,7 @@ object NotificationHelper {
 
         val notificationManager = context.getSystemService(NotificationManager::class.java)
         notificationManager.deleteNotificationChannel(LEGACY_CHANNEL_ID)
+        notificationManager.deleteNotificationChannel(PREVIOUS_CHANNEL_ID)
 
         val channel = NotificationChannel(
             CHANNEL_ID,
@@ -39,13 +47,7 @@ object NotificationHelper {
             description = context.getString(R.string.notification_channel_description)
             enableVibration(true)
             vibrationPattern = longArrayOf(0, 180, 100, 180)
-            setSound(
-                soundUri(context),
-                AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build(),
-            )
+            setSound(null, null)
         }
 
         notificationManager.createNotificationChannel(channel)
@@ -80,6 +82,7 @@ object NotificationHelper {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
+        val alertPreferences = AlertPreferenceStore.load(context)
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(message.title)
@@ -87,13 +90,71 @@ object NotificationHelper {
             .setStyle(NotificationCompat.BigTextStyle().bigText(message.body))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_EVENT)
-            .setSound(soundUri(context))
+            .setSilent(true)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .build()
 
         notificationManager.notify(notificationId, notification)
+        playAlertSound(
+            context = context,
+            volumePercent = alertPreferences.volumePercent,
+            durationSeconds = alertPreferences.soundDurationSeconds,
+        )
         return true
+    }
+
+    private fun playAlertSound(
+        context: Context,
+        volumePercent: Int,
+        durationSeconds: Int,
+    ) {
+        mainHandler.post {
+            stopActiveSound()
+            if (volumePercent <= 0) return@post
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+            val player = MediaPlayer.create(
+                context.applicationContext,
+                R.raw.trading_alert_chime,
+                audioAttributes,
+                0,
+            ) ?: return@post
+            val volume = volumePercent.coerceIn(0, 100) / 100f
+            player.setVolume(volume, volume)
+            player.isLooping = true
+            player.setOnErrorListener { mediaPlayer, _, _ ->
+                if (activePlayer === mediaPlayer) activePlayer = null
+                mediaPlayer.release()
+                true
+            }
+            activePlayer = player
+            player.start()
+
+            val stopTask = Runnable { stopActiveSound() }
+            stopSound = stopTask
+            mainHandler.postDelayed(
+                stopTask,
+                durationSeconds.coerceIn(
+                    AlertPreferenceStore.MIN_SOUND_DURATION_SECONDS,
+                    AlertPreferenceStore.MAX_SOUND_DURATION_SECONDS,
+                ) * 1_000L,
+            )
+        }
+    }
+
+    private fun stopActiveSound() {
+        stopSound?.let(mainHandler::removeCallbacks)
+        stopSound = null
+        activePlayer?.let { player ->
+            runCatching {
+                if (player.isPlaying) player.stop()
+            }
+            player.release()
+        }
+        activePlayer = null
     }
 
     private fun nextId(): Int = (System.currentTimeMillis() and 0x7FFFFFFF).toInt()

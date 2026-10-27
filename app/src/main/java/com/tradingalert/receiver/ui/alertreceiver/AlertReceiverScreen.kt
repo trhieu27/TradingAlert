@@ -63,7 +63,8 @@ internal fun AlertReceiverContent(
     snackbarHostState: SnackbarHostState,
     onLanguageSelected: (AppLanguage) -> Unit,
     onRequestPermission: () -> Unit,
-    onTestNotification: () -> Unit,
+    onVolumeChange: (Int) -> Unit,
+    onSoundDurationChange: (Int) -> Unit,
     onOpenSoundSettings: () -> Unit,
 ) {
     Scaffold(
@@ -138,7 +139,8 @@ internal fun AlertReceiverContent(
                         bottom = 28.dp,
                     ),
                     onRequestPermission = onRequestPermission,
-                    onTestNotification = onTestNotification,
+                    onVolumeChange = onVolumeChange,
+                    onSoundDurationChange = onSoundDurationChange,
                     onOpenSoundSettings = onOpenSoundSettings,
                 )
             } else {
@@ -146,7 +148,8 @@ internal fun AlertReceiverContent(
                     state = state,
                     contentPadding = PaddingValues(0.dp),
                     onRequestPermission = onRequestPermission,
-                    onTestNotification = onTestNotification,
+                    onVolumeChange = onVolumeChange,
+                    onSoundDurationChange = onSoundDurationChange,
                     onOpenSoundSettings = onOpenSoundSettings,
                 )
             }
@@ -235,7 +238,8 @@ internal fun PhoneLayout(
     state: AlertReceiverUiState,
     contentPadding: PaddingValues,
     onRequestPermission: () -> Unit,
-    onTestNotification: () -> Unit,
+    onVolumeChange: (Int) -> Unit,
+    onSoundDurationChange: (Int) -> Unit,
     onOpenSoundSettings: () -> Unit,
 ) {
     LazyColumn(
@@ -246,7 +250,17 @@ internal fun PhoneLayout(
         item { ConnectionStrip(state) }
         if (!state.notificationsAllowed) item { NotificationPermissionCard(onRequestPermission) }
         if (state.lastTitle != null) item { LastMessageCard(state) }
-        item { QuickActionsCard(state.notificationsAllowed, onTestNotification, onOpenSoundSettings) }
+        if (state.notificationsAllowed) {
+            item {
+                QuickActionsCard(
+                    volumePercent = state.alertVolumePercent,
+                    soundDurationSeconds = state.soundDurationSeconds,
+                    onVolumeChange = onVolumeChange,
+                    onSoundDurationChange = onSoundDurationChange,
+                    onOpenSoundSettings = onOpenSoundSettings,
+                )
+            }
+        }
         if (state.lastTitle == null) item { LastMessageCard(state) }
         item { DeliveryTipCard() }
     }
@@ -257,7 +271,8 @@ internal fun WideLayout(
     state: AlertReceiverUiState,
     contentPadding: PaddingValues,
     onRequestPermission: () -> Unit,
-    onTestNotification: () -> Unit,
+    onVolumeChange: (Int) -> Unit,
+    onSoundDurationChange: (Int) -> Unit,
     onOpenSoundSettings: () -> Unit,
 ) {
     Row(
@@ -286,7 +301,17 @@ internal fun WideLayout(
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            item { QuickActionsCard(state.notificationsAllowed, onTestNotification, onOpenSoundSettings) }
+            if (state.notificationsAllowed) {
+                item {
+                    QuickActionsCard(
+                        volumePercent = state.alertVolumePercent,
+                        soundDurationSeconds = state.soundDurationSeconds,
+                        onVolumeChange = onVolumeChange,
+                        onSoundDurationChange = onSoundDurationChange,
+                        onOpenSoundSettings = onOpenSoundSettings,
+                    )
+                }
+            }
             item { LastMessageCard(state) }
         }
     }
@@ -313,7 +338,8 @@ internal fun AlertReceiverContentPreview() {
             snackbarHostState = remember { SnackbarHostState() },
             onLanguageSelected = {},
             onRequestPermission = {},
-            onTestNotification = {},
+            onVolumeChange = {},
+            onSoundDurationChange = {},
             onOpenSoundSettings = {},
         )
     }

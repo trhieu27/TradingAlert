@@ -41,7 +41,7 @@ internal fun ConnectionStrip(state: AlertReceiverUiState) {
         else -> stringResource(R.string.connection_waiting)
     }
     val statusColor = when {
-        connected -> Color(0xFF10B981)
+        connected -> Color(0xFF34D399)
         else -> MaterialTheme.colorScheme.tertiary
     }
     Surface(
