@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Build
@@ -98,9 +99,22 @@ internal object DeviceReliabilitySettings {
         }
         return candidates
             .asSequence()
-            .map { component -> Intent().setComponent(component) }
-            .firstOrNull { intent -> intent.resolveActivity(context.packageManager) != null }
+            .firstOrNull { component -> context.hasExportedActivity(component) }
+            ?.let { component -> Intent().setComponent(component) }
     }
+
+    private fun Context.hasExportedActivity(component: ComponentName): Boolean = runCatching {
+        val activityInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packageManager.getActivityInfo(
+                component,
+                PackageManager.ComponentInfoFlags.of(0L),
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            packageManager.getActivityInfo(component, 0)
+        }
+        activityInfo.enabled && activityInfo.exported
+    }.getOrDefault(false)
 
     private fun appDetailsIntent(context: Context) = Intent(
         Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
