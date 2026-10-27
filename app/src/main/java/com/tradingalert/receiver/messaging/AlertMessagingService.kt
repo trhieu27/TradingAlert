@@ -30,6 +30,7 @@ class AlertMessagingService : FirebaseMessagingService() {
         getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
             .edit()
             .putString(KEY_TOKEN, token)
+            .putLong(KEY_TOKEN_TIME, System.currentTimeMillis())
             .apply()
 
         // TODO: Send the refreshed token to your authenticated application server.
@@ -39,6 +40,7 @@ class AlertMessagingService : FirebaseMessagingService() {
     companion object {
         const val PREFS_NAME = "firebase_alert_preferences"
         const val KEY_TOKEN = "fcm_token"
+        const val KEY_TOKEN_TIME = "fcm_token_time"
         const val KEY_LAST_TITLE = "last_title"
         const val KEY_LAST_BODY = "last_body"
         const val KEY_LAST_TIME = "last_time"

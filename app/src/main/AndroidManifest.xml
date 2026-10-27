@@ -15,7 +15,8 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -38,7 +39,7 @@
             android:resource="@color/alert_blue" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="firebase_alerts" />
+            android:value="trading_alerts_v2" />
     </application>
 
 </manifest>
