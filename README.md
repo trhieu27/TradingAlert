@@ -7,7 +7,7 @@
 ## Luồng hoạt động
 
 ```text
-TradingView → Cloudflare Worker/backend → Firebase FCM → Android app
+TradingView → Backend riêng → Firebase FCM → Android app
 ```
 
 1. App gọi `GET /config` để lấy Firebase client config và topic.
@@ -41,7 +41,7 @@ com.tradingalert.receiver
 
 ## Contract backend
 
-Backend có thể dùng Cloudflare Worker hoặc nền tảng khác, nhưng phải hỗ trợ contract dưới đây.
+Backend được phát triển trong repository riêng và phải hỗ trợ contract dưới đây.
 
 ### Lấy cấu hình Firebase
 
@@ -164,8 +164,6 @@ Mọi giá trị trong `data` phải là chuỗi. App hỗ trợ `title`, `body`
 
 `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` và `WEBHOOK_SECRET` phải được lưu bằng secret manager, không commit vào Git.
 
-Mã Cloudflare Worker trong [`worker/`](worker/) chỉ là triển khai tham khảo để người làm backend hoàn thiện sau.
-
 ## Kiểm tra tích hợp
 
 1. `GET /config` trả đúng Firebase project, package và topic.
@@ -181,5 +179,4 @@ Nếu người dùng bấm **Force stop** trong Android Settings, Android có th
 
 - [Firebase HTTP v1](https://firebase.google.com/docs/cloud-messaging/send/v1-api)
 - [Nhận FCM trên Android](https://firebase.google.com/docs/cloud-messaging/android/receive-messages)
-- [Cloudflare Workers secrets](https://developers.cloudflare.com/workers/configuration/secrets/)
 - [TradingView webhook alerts](https://www.tradingview.com/support/solutions/43000529348-how-to-configure-webhook-alerts/)

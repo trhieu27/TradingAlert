@@ -1,6 +1,7 @@
 package com.tradingalert.receiver.messaging
 
 import android.content.Context
+import android.util.Log
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.messaging.FirebaseMessaging
@@ -37,13 +38,16 @@ object MessagingServerConfig {
             ?.let { config -> runCatching { applyFirebaseConfig(context, config.firebase) }.isSuccess }
             ?: false
 
-    fun fetchAndApply(context: Context): Result<ServerMessagingConfig> = runCatching {
-        val config = runCatching { fetchRemoteConfig() }
-            .getOrElse { error -> cachedConfig(context) ?: throw error }
-        applyFirebaseConfig(context, config.firebase)
-        cacheConfig(context, config)
-        config
-    }
+    fun fetchAndApply(context: Context): Result<ServerMessagingConfig> =
+        runCatching {
+            val config = runCatching { fetchRemoteConfig() }
+                .getOrElse { error -> cachedConfig(context) ?: throw error }
+            applyFirebaseConfig(context, config.firebase)
+            cacheConfig(context, config)
+            config
+        }.onFailure { error ->
+            Log.e(TAG, "Unable to load or apply server messaging configuration", error)
+        }
 
     fun subscribe(
         context: Context,
@@ -158,4 +162,6 @@ object MessagingServerConfig {
 
     private fun JSONObject.requiredString(name: String): String =
         getString(name).trim().also { value -> require(value.isNotEmpty()) { "$name is required" } }
+
+    private const val TAG = "MessagingServerConfig"
 }
