@@ -60,15 +60,16 @@ Project vẫn build được khi chưa có `google-services.json`, nhưng lúc �
 
 ### 2. Firebase test và Firebase khách hàng
 
-Để test bằng Firebase của bạn, đăng ký package trên trong Firebase của bạn và dùng file `google-services.json` tương ứng.
+Để test bằng Firebase của bạn, đăng ký package trên trong Firebase của bạn và dùng file `google-services.json` tương ứng. Ngoài ra có thể nhấn biểu tượng **Edit** trên thanh công cụ, dán toàn bộ nội dung JSON và chọn **Lưu cấu hình**. App sẽ kiểm tra package, đổi Firebase mặc định và lấy FCM token mới mà không cần build lại.
 
-Khi chuyển sang Firebase của khách hàng:
+Khi chuyển sang Firebase của khách hàng ngay trong app:
 
 1. Đăng ký cùng package `com.tradingalert.receiver` trong Firebase của khách hàng.
-2. Thay `app/google-services.json` bằng file của khách hàng.
-3. Xóa ứng dụng test khỏi điện thoại hoặc xóa dữ liệu ứng dụng.
-4. Clean, build và cài lại app.
-5. Lấy FCM token mới trong màn hình chính.
+2. Mở app và nhấn biểu tượng **Edit** trước nút đổi ngôn ngữ.
+3. Dán nội dung `google-services.json` của khách hàng rồi lưu.
+4. Chờ app lấy FCM token mới và dùng token đó để gửi thử.
+
+File `app/google-services.json` vẫn là cấu hình mặc định được đóng gói khi build. Cấu hình nhập trong app chỉ được lưu cục bộ trên thiết bị và được ưu tiên ở các lần mở sau.
 
 FCM token và thông tin xác thực gửi tin nhắn của hai Firebase project không dùng thay thế cho nhau.
 

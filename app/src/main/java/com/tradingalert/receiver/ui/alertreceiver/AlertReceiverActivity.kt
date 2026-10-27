@@ -43,6 +43,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.google.firebase.messaging.FirebaseMessaging
 import com.tradingalert.receiver.R
 import com.tradingalert.receiver.data.notification.NotificationHistoryRepository
+import com.tradingalert.receiver.firebase.FirebaseRuntimeConfig
 import com.tradingalert.receiver.localization.AppLanguage
 import com.tradingalert.receiver.localization.AppLanguageManager
 import com.tradingalert.receiver.messaging.AlertMessagingService
@@ -61,6 +62,9 @@ private data object AlertHomeRoute : NavKey
 
 @Serializable
 private data object NotificationHistoryRoute : NavKey
+
+@Serializable
+private data object FirebaseConfigRoute : NavKey
 
 class AlertReceiverActivity : ComponentActivity() {
     private var notificationSettingsWatcher: Job? = null
@@ -190,6 +194,7 @@ private fun AlertReceiverRoute(
     val permissionDeniedMessage = stringResource(R.string.notification_permission_denied)
     val tokenFetchFailedMessage = stringResource(R.string.token_fetch_failed)
     val firebaseConfigMissingMessage = stringResource(R.string.firebase_config_missing)
+    val firebaseConfigSavedMessage = stringResource(R.string.firebase_config_saved)
 
     fun showMessage(message: String) {
         scope.launch { snackbarHostState.showSnackbar(message) }
@@ -204,6 +209,31 @@ private fun AlertReceiverRoute(
             historyLoading = state.historyLoading,
             notificationHistory = state.notificationHistory,
         )
+    }
+
+    fun refreshFirebaseToken() {
+        state = state.copy(tokenRefreshing = true)
+        runCatching {
+            FirebaseRuntimeConfig.ensureDefaultApp(context)
+            FirebaseMessaging.getInstance()
+        }.onSuccess { messaging ->
+            messaging.token.addOnCompleteListener { task ->
+                state = if (task.isSuccessful) {
+                    val token = task.result
+                    val now = System.currentTimeMillis()
+                    context.getSharedPreferences(AlertMessagingService.PREFS_NAME, Context.MODE_PRIVATE)
+                        .edit()
+                        .putString(AlertMessagingService.KEY_TOKEN, token)
+                        .putLong(AlertMessagingService.KEY_TOKEN_TIME, now)
+                        .apply()
+                    state.copy(token = token, tokenUpdatedAt = now, tokenRefreshing = false)
+                } else {
+                    state.copy(token = tokenFetchFailedMessage, tokenRefreshing = false)
+                }
+            }
+        }.onFailure {
+            state = state.copy(token = firebaseConfigMissingMessage, tokenRefreshing = false)
+        }
     }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -224,32 +254,7 @@ private fun AlertReceiverRoute(
     }
 
     LaunchedEffect(Unit) {
-        runCatching { FirebaseMessaging.getInstance() }
-            .onSuccess { messaging ->
-                messaging.token.addOnCompleteListener { task ->
-                    state = if (task.isSuccessful) {
-                        val token = task.result
-                        val now = System.currentTimeMillis()
-                        context.getSharedPreferences(AlertMessagingService.PREFS_NAME, Context.MODE_PRIVATE)
-                            .edit()
-                            .putString(AlertMessagingService.KEY_TOKEN, token)
-                            .putLong(AlertMessagingService.KEY_TOKEN_TIME, now)
-                            .apply()
-                        state.copy(token = token, tokenUpdatedAt = now, tokenRefreshing = false)
-                    } else {
-                        state.copy(
-                            token = tokenFetchFailedMessage,
-                            tokenRefreshing = false,
-                        )
-                    }
-                }
-            }
-            .onFailure {
-                state = state.copy(
-                    token = firebaseConfigMissingMessage,
-                    tokenRefreshing = false,
-                )
-            }
+        refreshFirebaseToken()
     }
 
     LaunchedEffect(context) {
@@ -302,6 +307,11 @@ private fun AlertReceiverRoute(
                     selectedLanguage = selectedLanguage,
                     snackbarHostState = snackbarHostState,
                     onLanguageSelected = onLanguageSelected,
+                    onOpenFirebaseConfig = dropUnlessResumed {
+                        if (backStack.lastOrNull() != FirebaseConfigRoute) {
+                            backStack.add(FirebaseConfigRoute)
+                        }
+                    },
                     onRequestPermission = {
                         if (
                             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -351,6 +361,19 @@ private fun AlertReceiverRoute(
                 NotificationHistoryScreen(
                     items = state.notificationHistory,
                     isLoading = state.historyLoading,
+                    onBack = navigateBack,
+                )
+            }
+            entry<FirebaseConfigRoute> {
+                FirebaseConfigScreen(
+                    initialJson = FirebaseRuntimeConfig.editableJson(context),
+                    onSave = { json ->
+                        FirebaseRuntimeConfig.saveAndApply(context, json)
+                            .map {
+                                refreshFirebaseToken()
+                                showMessage(firebaseConfigSavedMessage)
+                            }
+                    },
                     onBack = navigateBack,
                 )
             }
