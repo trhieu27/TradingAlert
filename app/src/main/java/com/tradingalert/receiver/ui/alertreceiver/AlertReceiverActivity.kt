@@ -35,6 +35,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -290,19 +291,34 @@ private fun AlertReceiverRoute(
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { refresh() }
 
     val backStack = rememberNavBackStack(AlertHomeRoute)
-    val navigateBack: () -> Unit = { backStack.removeLastOrNull() }
-
-    NavDisplay(
-        backStack = backStack,
-        onBack = {
+    var backNavigationLocked by remember { mutableStateOf(false) }
+    var backUnlockDestination by remember { mutableStateOf<NavKey?>(null) }
+    val navigateBack: () -> Unit = {
+        if (!backNavigationLocked) {
             if (backStack.size > 1) {
-                navigateBack()
+                backNavigationLocked = true
+                backUnlockDestination = backStack.getOrNull(backStack.lastIndex - 1)
+                backStack.removeLastOrNull()
             } else {
                 activity.finish()
             }
-        },
+        }
+    }
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = navigateBack,
         entryProvider = entryProvider {
             entry<AlertHomeRoute> {
+                UnlockBackNavigationOnResume(
+                    enabled = backNavigationLocked && backUnlockDestination == AlertHomeRoute,
+                    onReady = {
+                        if (backUnlockDestination == AlertHomeRoute) {
+                            backNavigationLocked = false
+                            backUnlockDestination = null
+                        }
+                    },
+                )
                 AlertReceiverContent(
                     state = state,
                     selectedLanguage = selectedLanguage,
@@ -364,6 +380,16 @@ private fun AlertReceiverRoute(
                 )
             }
             entry<NotificationHistoryRoute> {
+                UnlockBackNavigationOnResume(
+                    enabled = backNavigationLocked &&
+                        backUnlockDestination == NotificationHistoryRoute,
+                    onReady = {
+                        if (backUnlockDestination == NotificationHistoryRoute) {
+                            backNavigationLocked = false
+                            backUnlockDestination = null
+                        }
+                    },
+                )
                 NotificationHistoryScreen(
                     items = state.notificationHistory,
                     isLoading = state.historyLoading,
@@ -371,6 +397,15 @@ private fun AlertReceiverRoute(
                 )
             }
             entry<FirebaseConfigRoute> {
+                UnlockBackNavigationOnResume(
+                    enabled = backNavigationLocked && backUnlockDestination == FirebaseConfigRoute,
+                    onReady = {
+                        if (backUnlockDestination == FirebaseConfigRoute) {
+                            backNavigationLocked = false
+                            backUnlockDestination = null
+                        }
+                    },
+                )
                 FirebaseConfigScreen(
                     initialJson = FirebaseRuntimeConfig.editableJson(context),
                     onSave = { json ->
@@ -386,6 +421,28 @@ private fun AlertReceiverRoute(
         },
     )
 }
+
+@Composable
+private fun UnlockBackNavigationOnResume(
+    enabled: Boolean,
+    onReady: () -> Unit,
+) {
+    var isResumed by remember { mutableStateOf(false) }
+
+    LifecycleResumeEffect(Unit) {
+        isResumed = true
+        onPauseOrDispose { isResumed = false }
+    }
+
+    LaunchedEffect(enabled, isResumed) {
+        if (enabled && isResumed) {
+            delay(BACK_NAVIGATION_RESUME_SETTLE_MILLIS)
+            onReady()
+        }
+    }
+}
+
+private const val BACK_NAVIGATION_RESUME_SETTLE_MILLIS = 500L
 
 private fun alertSoundSettingsIntent(context: Context): Intent =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

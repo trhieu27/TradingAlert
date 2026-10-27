@@ -5,10 +5,17 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
-if (file("google-services.json").exists()) {
+val googleServicesConfig = file("google-services.json")
+val hasValidGoogleServicesConfig = googleServicesConfig.isFile &&
+    googleServicesConfig.length() > 0L &&
+    runCatching {
+        groovy.json.JsonSlurper().parse(googleServicesConfig)
+    }.isSuccess
+
+if (hasValidGoogleServicesConfig) {
     apply(plugin = "com.google.gms.google-services")
 } else {
-    logger.warn("app/google-services.json is missing; Firebase resources will not be generated.")
+    logger.warn("app/google-services.json is missing or invalid; use the in-app Firebase configuration editor.")
 }
 
 android {
