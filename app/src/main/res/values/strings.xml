@@ -9,20 +9,12 @@
 
     <string name="connection_title">Kênh tín hiệu trực tiếp</string>
     <string name="connection_subtitle">Đồng bộ Firebase Cloud Messaging</string>
-    <string name="connection_waiting_permission">CHỜ CẤP QUYỀN</string>
     <string name="connection_connecting">ĐANG KẾT NỐI</string>
     <string name="connection_live">LIVE</string>
     <string name="connection_waiting">CHỜ KẾT NỐI</string>
 
-    <string name="status_active">ĐANG HOẠT ĐỘNG</string>
-    <string name="status_setup_required">CẦN THIẾT LẬP</string>
-    <string name="status_ready_title">Sẵn sàng nhận tín hiệu</string>
     <string name="status_setup_title">Bật thông báo để không bỏ lỡ tín hiệu</string>
-    <string name="status_ready_body">Firebase có thể gửi cảnh báo nền và phát âm thanh riêng của ứng dụng.</string>
     <string name="status_setup_body">Cho phép thông báo trước khi kiểm tra tín hiệu và âm thanh.</string>
-    <string name="high_priority_channel">Kênh ưu tiên cao</string>
-    <string name="custom_sound">Âm thanh riêng</string>
-    <string name="background_ready">Sẵn sàng nhận nền</string>
     <string name="allow_notifications">Cho phép thông báo</string>
 
     <string name="quick_check_title">Kiểm tra nhanh</string>
@@ -31,17 +23,9 @@
     <string name="app_sound_settings">Âm thanh riêng của app</string>
     <string name="channel_security_note">Chỉ mở cài đặt kênh Cảnh báo giao dịch; âm thanh của app khác không bị thay đổi.</string>
 
-    <string name="firebase_device_title">Thiết bị Firebase</string>
-    <string name="firebase_device_subtitle">Registration token cho Webhook</string>
-    <string name="refresh_token">Làm mới token</string>
-    <string name="copy_token">Sao chép token</string>
     <string name="token_loading">Đang lấy token…</string>
     <string name="token_fetch_failed">Chưa có token. Kiểm tra Firebase và kết nối mạng.</string>
     <string name="firebase_config_missing">Thiếu cấu hình Firebase: app/google-services.json</string>
-    <string name="token_syncing">Đang đồng bộ…</string>
-    <string name="token_synced">Đồng bộ %1$s</string>
-    <string name="token_ready">Token đã sẵn sàng</string>
-    <string name="token_unavailable">FCM token chưa sẵn sàng</string>
 
     <string name="latest_signal_title">Tín hiệu gần nhất</string>
     <string name="latest_signal_empty_subtitle">Chưa có dữ liệu</string>
@@ -53,10 +37,8 @@
 
     <string name="notification_permission_granted">Đã bật thông báo</string>
     <string name="notification_permission_denied">Bạn chưa cấp quyền thông báo</string>
-    <string name="token_copied">Đã sao chép FCM token</string>
     <string name="test_alert_sent">Đã gửi cảnh báo thử</string>
     <string name="notification_permission_required">Hãy cấp quyền thông báo trước</string>
-    <string name="clipboard_fcm_token_label">FCM token</string>
     <string name="test_notification_title">Tín hiệu thử nghiệm</string>
     <string name="test_notification_body">Âm thanh riêng của Trading Alert Receiver đang hoạt động.</string>
 

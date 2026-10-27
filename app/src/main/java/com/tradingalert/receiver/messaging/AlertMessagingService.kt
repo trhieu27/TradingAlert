@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.tradingalert.receiver.R
+import com.tradingalert.receiver.localization.AppLanguageManager
 
 class AlertMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
@@ -13,10 +14,11 @@ class AlertMessagingService : FirebaseMessagingService() {
             remoteMessage.notification?.title?.let { putIfAbsent("title", it) }
             remoteMessage.notification?.body?.let { putIfAbsent("body", it) }
         }
+        val localizedContext = AppLanguageManager.localizedContext(this)
         val message = PushMessage.from(
             data = payload,
-            defaultTitle = getString(R.string.default_notification_title),
-            defaultBody = getString(R.string.default_notification_body),
+            defaultTitle = localizedContext.getString(R.string.default_notification_title),
+            defaultBody = localizedContext.getString(R.string.default_notification_body),
         )
 
         getSharedPreferences(PREFS_NAME, MODE_PRIVATE)

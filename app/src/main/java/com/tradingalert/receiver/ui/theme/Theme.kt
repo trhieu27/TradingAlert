@@ -38,5 +38,9 @@ private val DarkColors = darkColorScheme(
 @Composable
 fun TradingAlertReceiverTheme(content: @Composable () -> Unit) {
     val colors = if (isSystemInDarkTheme()) DarkColors else LightColors
-    MaterialTheme(colorScheme = colors, content = content)
+    MaterialTheme(
+        colorScheme = colors,
+        typography = TradingAlertTypography,
+        content = content,
+    )
 }

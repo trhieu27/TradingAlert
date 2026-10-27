@@ -1,32 +1,33 @@
 package com.tradingalert.receiver.ui.alertreceiver
 
 import android.Manifest
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.setContent
+import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.app.NotificationManagerCompat
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -34,6 +35,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.google.firebase.messaging.FirebaseMessaging
 import com.tradingalert.receiver.R
+import com.tradingalert.receiver.localization.AppLanguage
 import com.tradingalert.receiver.localization.AppLanguageManager
 import com.tradingalert.receiver.messaging.AlertMessagingService
 import com.tradingalert.receiver.messaging.NotificationHelper
@@ -41,14 +43,44 @@ import com.tradingalert.receiver.messaging.PushMessage
 import com.tradingalert.receiver.ui.theme.TradingAlertReceiverTheme
 import kotlinx.coroutines.launch
 
-class AlertReceiverActivity : AppCompatActivity() {
+class AlertReceiverActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        hideNavigationBarForLaunch()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
         hideNavigationBar()
         setContent {
-            TradingAlertReceiverTheme {
-                AlertReceiverRoute()
+            var appLanguage by remember {
+                mutableStateOf(AppLanguageManager.savedLanguage(this@AlertReceiverActivity))
+            }
+            val localizedContext = remember(appLanguage) {
+                AppLanguageManager.localizedContext(this@AlertReceiverActivity, appLanguage)
+            }
+
+            CompositionLocalProvider(
+                LocalContext provides localizedContext,
+                LocalConfiguration provides localizedContext.resources.configuration,
+                LocalActivityResultRegistryOwner provides this@AlertReceiverActivity,
+            ) {
+                TradingAlertReceiverTheme {
+                    AlertReceiverRoute(
+                        activity = this@AlertReceiverActivity,
+                        selectedLanguage = appLanguage,
+                        onLanguageSelected = { language ->
+                            AppLanguageManager.setLanguage(this@AlertReceiverActivity, language)
+                            NotificationHelper.createChannel(
+                                AppLanguageManager.localizedContext(
+                                    this@AlertReceiverActivity,
+                                    language,
+                                ),
+                            )
+                            appLanguage = language
+                        },
+                    )
+                }
             }
         }
     }
@@ -58,7 +90,17 @@ class AlertReceiverActivity : AppCompatActivity() {
         if (hasFocus) hideNavigationBar()
     }
 
+    @Suppress("DEPRECATION")
+    private fun hideNavigationBarForLaunch() {
+        window.decorView.systemUiVisibility =
+            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+    }
+
     private fun hideNavigationBar() {
+        hideNavigationBarForLaunch()
         WindowCompat.getInsetsController(window, window.decorView).apply {
             hide(WindowInsetsCompat.Type.navigationBars())
             systemBarsBehavior =
@@ -68,19 +110,19 @@ class AlertReceiverActivity : AppCompatActivity() {
 }
 
 @Composable
-private fun AlertReceiverRoute() {
+private fun AlertReceiverRoute(
+    activity: ComponentActivity,
+    selectedLanguage: AppLanguage,
+    onLanguageSelected: (AppLanguage) -> Unit,
+) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var state by remember { mutableStateOf(loadAlertReceiverState(context)) }
-    var tokenRequest by remember { mutableIntStateOf(0) }
     val permissionGrantedMessage = stringResource(R.string.notification_permission_granted)
     val permissionDeniedMessage = stringResource(R.string.notification_permission_denied)
     val tokenFetchFailedMessage = stringResource(R.string.token_fetch_failed)
     val firebaseConfigMissingMessage = stringResource(R.string.firebase_config_missing)
-    val clipboardTokenLabel = stringResource(R.string.clipboard_fcm_token_label)
-    val tokenCopiedMessage = stringResource(R.string.token_copied)
-    val tokenUnavailableMessage = stringResource(R.string.token_unavailable)
     val testNotificationTitle = stringResource(R.string.test_notification_title)
     val testNotificationBody = stringResource(R.string.test_notification_body)
     val testAlertSentMessage = stringResource(R.string.test_alert_sent)
@@ -106,7 +148,7 @@ private fun AlertReceiverRoute() {
         showMessage(if (granted) permissionGrantedMessage else permissionDeniedMessage)
     }
 
-    LaunchedEffect(tokenRequest) {
+    LaunchedEffect(Unit) {
         state = state.copy(tokenRefreshing = true)
         runCatching { FirebaseMessaging.getInstance() }
             .onSuccess { messaging ->
@@ -158,12 +200,9 @@ private fun AlertReceiverRoute() {
 
     AlertReceiverContent(
         state = state,
-        selectedLanguage = AppLanguageManager.savedLanguage(context),
+        selectedLanguage = selectedLanguage,
         snackbarHostState = snackbarHostState,
-        onLanguageSelected = { language ->
-            AppLanguageManager.setLanguage(context, language)
-            NotificationHelper.createChannel(AppLanguageManager.localizedContext(context, language))
-        },
+        onLanguageSelected = onLanguageSelected,
         onRequestPermission = {
             if (
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -172,27 +211,12 @@ private fun AlertReceiverRoute() {
             ) {
                 permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             } else if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) {
-                context.startActivity(appNotificationSettingsIntent(context))
+                activity.startActivity(appNotificationSettingsIntent(context))
             } else {
                 NotificationHelper.createChannel(context)
-                context.startActivity(alertSoundSettingsIntent(context))
+                activity.startActivity(alertSoundSettingsIntent(context))
             }
         },
-        onCopyToken = {
-            if (isUsableToken(state.token)) {
-                context.getSystemService(ClipboardManager::class.java)
-                    .setPrimaryClip(
-                        ClipData.newPlainText(
-                            clipboardTokenLabel,
-                            state.token,
-                        ),
-                    )
-                showMessage(tokenCopiedMessage)
-            } else {
-                showMessage(tokenUnavailableMessage)
-            }
-        },
-        onRefreshToken = { tokenRequest += 1 },
         onTestNotification = {
             val shown = NotificationHelper.show(
                 context,
@@ -206,7 +230,7 @@ private fun AlertReceiverRoute() {
         },
         onOpenSoundSettings = {
             NotificationHelper.createChannel(context)
-            context.startActivity(alertSoundSettingsIntent(context))
+            activity.startActivity(alertSoundSettingsIntent(context))
         },
     )
 }

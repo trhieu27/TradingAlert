@@ -3,8 +3,6 @@ package com.tradingalert.receiver.localization
 import android.content.Context
 import android.content.res.Configuration
 import android.os.LocaleList
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.LocaleListCompat
 import java.util.Locale
 
 internal enum class AppLanguage(val languageTag: String) {
@@ -25,16 +23,11 @@ internal object AppLanguageManager {
             ?: AppLanguage.VIETNAMESE
     }
 
-    fun applySavedLanguage(context: Context) {
-        applyLanguage(savedLanguage(context))
-    }
-
     fun setLanguage(context: Context, language: AppLanguage) {
         context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
             .edit()
             .putString(KEY_LANGUAGE_TAG, language.languageTag)
             .apply()
-        applyLanguage(language)
     }
 
     fun localizedContext(
@@ -45,11 +38,5 @@ internal object AppLanguageManager {
             setLocales(LocaleList(Locale.forLanguageTag(language.languageTag)))
         }
         return context.createConfigurationContext(configuration)
-    }
-
-    private fun applyLanguage(language: AppLanguage) {
-        AppCompatDelegate.setApplicationLocales(
-            LocaleListCompat.forLanguageTags(language.languageTag),
-        )
     }
 }

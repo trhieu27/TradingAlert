@@ -1,7 +1,7 @@
 package com.tradingalert.receiver.ui.alertreceiver
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,37 +10,30 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.CloudOff
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Key
 import androidx.compose.material.icons.rounded.NotificationsActive
-import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tradingalert.receiver.R
 import java.text.DateFormat
@@ -104,12 +97,7 @@ internal fun QuickActionsCard(
 }
 
 @Composable
-internal fun TokenCard(
-    state: AlertReceiverUiState,
-    onCopy: () -> Unit,
-    onRefresh: () -> Unit,
-) {
-    val tokenReady = isUsableToken(state.token)
+internal fun LastMessageCard(state: AlertReceiverUiState) {
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -120,120 +108,86 @@ internal fun TokenCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                Surface(
+                    modifier = Modifier.size(36.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = if (state.lastTitle == null) {
+                                Icons.Rounded.CloudOff
+                            } else {
+                                Icons.Rounded.NotificationsActive
+                            },
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.secondary,
+                        )
+                    }
+                }
+                Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
                     Text(
-                        stringResource(R.string.firebase_device_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        stringResource(R.string.latest_signal_title),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
                     )
                     Text(
-                        stringResource(R.string.firebase_device_subtitle),
+                        stringResource(
+                            if (state.lastTitle == null) {
+                                R.string.latest_signal_empty_subtitle
+                            } else {
+                                R.string.latest_signal_received_subtitle
+                            },
+                        ),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                TextButton(
-                    onClick = onRefresh,
-                    enabled = !state.tokenRefreshing,
-                    contentPadding = PaddingValues(horizontal = 8.dp),
-                ) {
-                    Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(5.dp))
-                    Text(stringResource(R.string.refresh_token), style = MaterialTheme.typography.labelMedium)
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.62f),
-            ) {
-                Row(
-                    modifier = Modifier.padding(start = 12.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        Icons.Rounded.Key,
-                        contentDescription = null,
-                        modifier = Modifier.size(15.dp),
-                        tint = MaterialTheme.colorScheme.secondary,
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = state.token,
-                        modifier = Modifier.weight(1f),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    IconButton(onClick = onCopy, enabled = tokenReady) {
-                        Icon(
-                            Icons.Rounded.ContentCopy,
-                            contentDescription = stringResource(R.string.copy_token),
+                if (state.lastTime > 0) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.72f),
+                    ) {
+                        Text(
+                            text = relativeTimeText(state.lastTime),
+                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold,
                         )
                     }
                 }
             }
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = when {
-                    state.tokenRefreshing -> stringResource(R.string.token_syncing)
-                    tokenReady && state.tokenUpdatedAt > 0L -> stringResource(
-                        R.string.token_synced,
-                        relativeTimeText(state.tokenUpdatedAt),
-                    )
-                    tokenReady -> stringResource(R.string.token_ready)
-                    else -> stringResource(R.string.token_unavailable)
-                },
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
-internal fun LastMessageCard(state: AlertReceiverUiState) {
-    Card(
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-    ) {
-        Column(Modifier.padding(16.dp)) {
-            SectionTitle(
-                icon = if (state.lastTitle == null) Icons.Rounded.CloudOff else Icons.Rounded.NotificationsActive,
-                title = stringResource(R.string.latest_signal_title),
-                subtitle = stringResource(
+            Spacer(Modifier.height(14.dp))
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+            ) {
+                Column(Modifier.padding(14.dp)) {
                     if (state.lastTitle == null) {
-                        R.string.latest_signal_empty_subtitle
+                        Text(
+                            stringResource(R.string.latest_signal_empty_body),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
                     } else {
-                        R.string.latest_signal_received_subtitle
-                    },
-                ),
-            )
-            Spacer(Modifier.height(12.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f))
-            Spacer(Modifier.height(12.dp))
-            if (state.lastTitle == null) {
-                Text(
-                    stringResource(R.string.latest_signal_empty_body),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            } else {
-                Text(state.lastTitle, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                state.lastBody?.let {
-                    Spacer(Modifier.height(5.dp))
-                    Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                if (state.lastTime > 0) {
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        DateFormat.getDateTimeInstance().format(Date(state.lastTime)),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+                        Text(
+                            state.lastTitle,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        state.lastBody?.let {
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                it,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -257,7 +211,7 @@ internal fun DeliveryTipCard() {
             Column {
                 Text(
                     stringResource(R.string.delivery_tip_title),
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     style = MaterialTheme.typography.titleSmall,
                 )
                 Spacer(Modifier.height(3.dp))
@@ -286,10 +240,10 @@ internal fun SectionTitle(
         )
         Spacer(Modifier.width(9.dp))
         Column {
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
             Text(
                 subtitle,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }

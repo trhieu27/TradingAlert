@@ -9,20 +9,12 @@
 
     <string name="connection_title">Live signal channel</string>
     <string name="connection_subtitle">Firebase Cloud Messaging sync</string>
-    <string name="connection_waiting_permission">WAITING FOR PERMISSION</string>
     <string name="connection_connecting">CONNECTING</string>
     <string name="connection_live">LIVE</string>
     <string name="connection_waiting">WAITING TO CONNECT</string>
 
-    <string name="status_active">ACTIVE</string>
-    <string name="status_setup_required">SETUP REQUIRED</string>
-    <string name="status_ready_title">Ready to receive signals</string>
     <string name="status_setup_title">Enable notifications to avoid missing signals</string>
-    <string name="status_ready_body">Firebase can deliver background alerts and play this app’s custom sound.</string>
     <string name="status_setup_body">Allow notifications before testing alerts and sound.</string>
-    <string name="high_priority_channel">High-priority channel</string>
-    <string name="custom_sound">Custom sound</string>
-    <string name="background_ready">Background ready</string>
     <string name="allow_notifications">Allow notifications</string>
 
     <string name="quick_check_title">Quick check</string>
@@ -31,17 +23,9 @@
     <string name="app_sound_settings">App-specific sound</string>
     <string name="channel_security_note">Only the Trading Alerts channel settings are opened; sounds from other apps are not changed.</string>
 
-    <string name="firebase_device_title">Firebase device</string>
-    <string name="firebase_device_subtitle">Registration token for webhook</string>
-    <string name="refresh_token">Refresh token</string>
-    <string name="copy_token">Copy token</string>
     <string name="token_loading">Getting token…</string>
     <string name="token_fetch_failed">No token available. Check Firebase and your network connection.</string>
     <string name="firebase_config_missing">Firebase configuration is missing: app/google-services.json</string>
-    <string name="token_syncing">Syncing…</string>
-    <string name="token_synced">Synced %1$s</string>
-    <string name="token_ready">Token is ready</string>
-    <string name="token_unavailable">FCM token is not ready</string>
 
     <string name="latest_signal_title">Latest signal</string>
     <string name="latest_signal_empty_subtitle">No data yet</string>
@@ -53,10 +37,8 @@
 
     <string name="notification_permission_granted">Notifications enabled</string>
     <string name="notification_permission_denied">Notification permission was not granted</string>
-    <string name="token_copied">FCM token copied</string>
     <string name="test_alert_sent">Test alert sent</string>
     <string name="notification_permission_required">Enable notifications first</string>
-    <string name="clipboard_fcm_token_label">FCM token</string>
     <string name="test_notification_title">Test signal</string>
     <string name="test_notification_body">The custom Trading Alert Receiver sound is working.</string>
 

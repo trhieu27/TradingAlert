@@ -44,6 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -62,8 +63,6 @@ internal fun AlertReceiverContent(
     snackbarHostState: SnackbarHostState,
     onLanguageSelected: (AppLanguage) -> Unit,
     onRequestPermission: () -> Unit,
-    onCopyToken: () -> Unit,
-    onRefreshToken: () -> Unit,
     onTestNotification: () -> Unit,
     onOpenSoundSettings: () -> Unit,
 ) {
@@ -79,8 +78,8 @@ internal fun AlertReceiverContent(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(
-                            modifier = Modifier.size(36.dp),
-                            shape = RoundedCornerShape(11.dp),
+                            modifier = Modifier.size(34.dp),
+                            shape = RoundedCornerShape(10.dp),
                             color = Color(0xFF082F66),
                         ) {
                             Image(
@@ -94,12 +93,16 @@ internal fun AlertReceiverContent(
                             Text(
                                 text = stringResource(R.string.app_short_name),
                                 style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                             Text(
                                 text = stringResource(R.string.app_subtitle),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }
@@ -135,8 +138,6 @@ internal fun AlertReceiverContent(
                         bottom = 28.dp,
                     ),
                     onRequestPermission = onRequestPermission,
-                    onCopyToken = onCopyToken,
-                    onRefreshToken = onRefreshToken,
                     onTestNotification = onTestNotification,
                     onOpenSoundSettings = onOpenSoundSettings,
                 )
@@ -145,8 +146,6 @@ internal fun AlertReceiverContent(
                     state = state,
                     contentPadding = PaddingValues(0.dp),
                     onRequestPermission = onRequestPermission,
-                    onCopyToken = onCopyToken,
-                    onRefreshToken = onRefreshToken,
                     onTestNotification = onTestNotification,
                     onOpenSoundSettings = onOpenSoundSettings,
                 )
@@ -190,7 +189,7 @@ private fun LanguageToggleButton(
 private fun LanguageFlag(language: AppLanguage) {
     Canvas(
         modifier = Modifier
-            .size(30.dp)
+            .size(26.dp)
             .clip(CircleShape),
     ) {
         when (language) {
@@ -236,8 +235,6 @@ internal fun PhoneLayout(
     state: AlertReceiverUiState,
     contentPadding: PaddingValues,
     onRequestPermission: () -> Unit,
-    onCopyToken: () -> Unit,
-    onRefreshToken: () -> Unit,
     onTestNotification: () -> Unit,
     onOpenSoundSettings: () -> Unit,
 ) {
@@ -247,10 +244,9 @@ internal fun PhoneLayout(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item { ConnectionStrip(state) }
-        item { StatusHero(state.notificationsAllowed, onRequestPermission) }
+        if (!state.notificationsAllowed) item { NotificationPermissionCard(onRequestPermission) }
         if (state.lastTitle != null) item { LastMessageCard(state) }
         item { QuickActionsCard(state.notificationsAllowed, onTestNotification, onOpenSoundSettings) }
-        item { TokenCard(state, onCopyToken, onRefreshToken) }
         if (state.lastTitle == null) item { LastMessageCard(state) }
         item { DeliveryTipCard() }
     }
@@ -261,8 +257,6 @@ internal fun WideLayout(
     state: AlertReceiverUiState,
     contentPadding: PaddingValues,
     onRequestPermission: () -> Unit,
-    onCopyToken: () -> Unit,
-    onRefreshToken: () -> Unit,
     onTestNotification: () -> Unit,
     onOpenSoundSettings: () -> Unit,
 ) {
@@ -280,8 +274,7 @@ internal fun WideLayout(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item { ConnectionStrip(state) }
-            item { StatusHero(state.notificationsAllowed, onRequestPermission) }
-            item { TokenCard(state, onCopyToken, onRefreshToken) }
+            if (!state.notificationsAllowed) item { NotificationPermissionCard(onRequestPermission) }
             item { DeliveryTipCard() }
         }
         LazyColumn(
@@ -320,8 +313,6 @@ internal fun AlertReceiverContentPreview() {
             snackbarHostState = remember { SnackbarHostState() },
             onLanguageSelected = {},
             onRequestPermission = {},
-            onCopyToken = {},
-            onRefreshToken = {},
             onTestNotification = {},
             onOpenSoundSettings = {},
         )

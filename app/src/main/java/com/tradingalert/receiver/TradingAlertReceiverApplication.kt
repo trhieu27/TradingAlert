@@ -7,7 +7,6 @@ import com.tradingalert.receiver.messaging.NotificationHelper
 class TradingAlertReceiverApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        AppLanguageManager.applySavedLanguage(this)
         NotificationHelper.createChannel(AppLanguageManager.localizedContext(this))
     }
 }
