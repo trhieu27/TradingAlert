@@ -317,6 +317,18 @@ private fun AlertReceiverRoute(
                         NotificationHelper.createChannel(context)
                         activity.startActivity(alertSoundSettingsIntent(context))
                     },
+                    onOpenBatteryOptimizationSettings = {
+                        DeviceReliabilitySettings.openBatteryOptimizationSettings(activity)
+                    },
+                    onOpenBackgroundActivitySettings = {
+                        DeviceReliabilitySettings.openBackgroundActivitySettings(activity)
+                    },
+                    onOpenBackgroundDataSettings = {
+                        DeviceReliabilitySettings.openBackgroundDataSettings(activity)
+                    },
+                    onOpenAutoStartSettings = {
+                        DeviceReliabilitySettings.openAutoStartSettings(activity)
+                    },
                     onOpenNotificationHistory = dropUnlessResumed {
                         if (backStack.lastOrNull() != NotificationHistoryRoute) {
                             backStack.add(NotificationHistoryRoute)

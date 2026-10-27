@@ -68,6 +68,10 @@ internal fun AlertReceiverContent(
     onVolumeChange: (Int) -> Unit,
     onSoundDurationChange: (Int) -> Unit,
     onOpenSoundSettings: () -> Unit,
+    onOpenBatteryOptimizationSettings: () -> Unit,
+    onOpenBackgroundActivitySettings: () -> Unit,
+    onOpenBackgroundDataSettings: () -> Unit,
+    onOpenAutoStartSettings: () -> Unit,
     onOpenNotificationHistory: () -> Unit,
 ) {
     Scaffold(
@@ -143,6 +147,10 @@ internal fun AlertReceiverContent(
                     onVolumeChange = onVolumeChange,
                     onSoundDurationChange = onSoundDurationChange,
                     onOpenSoundSettings = onOpenSoundSettings,
+                    onOpenBatteryOptimizationSettings = onOpenBatteryOptimizationSettings,
+                    onOpenBackgroundActivitySettings = onOpenBackgroundActivitySettings,
+                    onOpenBackgroundDataSettings = onOpenBackgroundDataSettings,
+                    onOpenAutoStartSettings = onOpenAutoStartSettings,
                 )
             } else {
                 WideLayout(
@@ -152,6 +160,10 @@ internal fun AlertReceiverContent(
                     onVolumeChange = onVolumeChange,
                     onSoundDurationChange = onSoundDurationChange,
                     onOpenSoundSettings = onOpenSoundSettings,
+                    onOpenBatteryOptimizationSettings = onOpenBatteryOptimizationSettings,
+                    onOpenBackgroundActivitySettings = onOpenBackgroundActivitySettings,
+                    onOpenBackgroundDataSettings = onOpenBackgroundDataSettings,
+                    onOpenAutoStartSettings = onOpenAutoStartSettings,
                 )
             }
         }
@@ -269,6 +281,10 @@ internal fun PhoneLayout(
     onVolumeChange: (Int) -> Unit,
     onSoundDurationChange: (Int) -> Unit,
     onOpenSoundSettings: () -> Unit,
+    onOpenBatteryOptimizationSettings: () -> Unit,
+    onOpenBackgroundActivitySettings: () -> Unit,
+    onOpenBackgroundDataSettings: () -> Unit,
+    onOpenAutoStartSettings: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -290,7 +306,15 @@ internal fun PhoneLayout(
         } else {
             item { NotificationPermissionCard(onRequestPermission) }
         }
-        item { DeliveryTipCard() }
+        item {
+            DeviceReliabilityCards(
+                state = state,
+                onOpenBatteryOptimizationSettings = onOpenBatteryOptimizationSettings,
+                onOpenBackgroundActivitySettings = onOpenBackgroundActivitySettings,
+                onOpenBackgroundDataSettings = onOpenBackgroundDataSettings,
+                onOpenAutoStartSettings = onOpenAutoStartSettings,
+            )
+        }
     }
 }
 
@@ -302,6 +326,10 @@ internal fun WideLayout(
     onVolumeChange: (Int) -> Unit,
     onSoundDurationChange: (Int) -> Unit,
     onOpenSoundSettings: () -> Unit,
+    onOpenBatteryOptimizationSettings: () -> Unit,
+    onOpenBackgroundActivitySettings: () -> Unit,
+    onOpenBackgroundDataSettings: () -> Unit,
+    onOpenAutoStartSettings: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxSize(),
@@ -318,7 +346,15 @@ internal fun WideLayout(
         ) {
             item { ConnectionStrip(state) }
             if (!state.notificationsAllowed) item { NotificationPermissionCard(onRequestPermission) }
-            item { DeliveryTipCard() }
+            item {
+                DeviceReliabilityCards(
+                    state = state,
+                    onOpenBatteryOptimizationSettings = onOpenBatteryOptimizationSettings,
+                    onOpenBackgroundActivitySettings = onOpenBackgroundActivitySettings,
+                    onOpenBackgroundDataSettings = onOpenBackgroundDataSettings,
+                    onOpenAutoStartSettings = onOpenAutoStartSettings,
+                )
+            }
         }
         LazyColumn(
             modifier = Modifier.weight(1.1f),
@@ -369,6 +405,10 @@ internal fun AlertReceiverContentPreview() {
             onVolumeChange = {},
             onSoundDurationChange = {},
             onOpenSoundSettings = {},
+            onOpenBatteryOptimizationSettings = {},
+            onOpenBackgroundActivitySettings = {},
+            onOpenBackgroundDataSettings = {},
+            onOpenAutoStartSettings = {},
             onOpenNotificationHistory = {},
         )
     }

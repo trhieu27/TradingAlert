@@ -39,8 +39,15 @@
     <string name="latest_signal_received_subtitle">Đã nhận từ Firebase</string>
     <string name="latest_signal_empty_body">Thông báo đầu tiên sẽ xuất hiện tại đây.</string>
 
-    <string name="delivery_tip_title">Nhận nền ổn định</string>
-    <string name="delivery_tip_body">Server nên gửi data message với priority HIGH. Một số hãng điện thoại còn yêu cầu bật tự khởi động và bỏ giới hạn pin.</string>
+    <string name="battery_optimization_title">Bỏ giới hạn pin</string>
+    <string name="battery_optimization_body">Cho phép app tiếp tục nhận và xử lý tín hiệu khi màn hình tắt.</string>
+    <string name="background_activity_title">Cho phép chạy nền</string>
+    <string name="background_activity_body">Thiết bị đang giới hạn hoạt động nền của app.</string>
+    <string name="background_data_title">Cho phép dữ liệu nền</string>
+    <string name="background_data_body">Data Saver đang chặn kết nối nền cần thiết cho Firebase.</string>
+    <string name="auto_start_title">Bật tự khởi động</string>
+    <string name="auto_start_body">Mở cài đặt của hãng để app có thể khởi động lại và nhận tín hiệu.</string>
+    <string name="open_device_setting">Mở cài đặt</string>
 
     <string name="notification_permission_granted">Đã bật thông báo</string>
     <string name="notification_permission_denied">Bạn chưa cấp quyền thông báo</string>

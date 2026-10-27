@@ -1,5 +1,7 @@
 package com.tradingalert.receiver.ui.alertreceiver
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -16,15 +18,19 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
+import androidx.compose.material.icons.rounded.BatteryAlert
 import androidx.compose.material.icons.rounded.CloudOff
-import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.DataUsage
 import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.PlayCircle
+import androidx.compose.material.icons.rounded.PauseCircle
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.Slider as ClassicSlider
 import androidx.compose.material.SliderDefaults as ClassicSliderDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -303,31 +309,113 @@ internal fun LastMessageCard(state: AlertReceiverUiState) {
 }
 
 @Composable
-internal fun DeliveryTipCard() {
-    Surface(
+internal fun DeviceReliabilityCards(
+    state: AlertReceiverUiState,
+    onOpenBatteryOptimizationSettings: () -> Unit,
+    onOpenBackgroundActivitySettings: () -> Unit,
+    onOpenBackgroundDataSettings: () -> Unit,
+    onOpenAutoStartSettings: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        if (state.batteryOptimizationRequired) {
+            DeviceSettingCard(
+                icon = Icons.Rounded.BatteryAlert,
+                title = stringResource(R.string.battery_optimization_title),
+                body = stringResource(R.string.battery_optimization_body),
+                onClick = onOpenBatteryOptimizationSettings,
+            )
+        }
+        if (state.backgroundActivityRestricted) {
+            DeviceSettingCard(
+                icon = Icons.Rounded.PauseCircle,
+                title = stringResource(R.string.background_activity_title),
+                body = stringResource(R.string.background_activity_body),
+                onClick = onOpenBackgroundActivitySettings,
+            )
+        }
+        if (state.backgroundDataRestricted) {
+            DeviceSettingCard(
+                icon = Icons.Rounded.DataUsage,
+                title = stringResource(R.string.background_data_title),
+                body = stringResource(R.string.background_data_body),
+                onClick = onOpenBackgroundDataSettings,
+            )
+        }
+        if (state.autoStartSettingsAvailable) {
+            DeviceSettingCard(
+                icon = Icons.Rounded.PlayCircle,
+                title = stringResource(R.string.auto_start_title),
+                body = stringResource(R.string.auto_start_body),
+                onClick = onOpenAutoStartSettings,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DeviceSettingCard(
+    icon: ImageVector,
+    title: String,
+    body: String,
+    onClick: () -> Unit,
+) {
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.55f),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.8f),
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
-        Row(Modifier.padding(17.dp), verticalAlignment = Alignment.Top) {
-            Icon(
-                Icons.Rounded.Info,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.secondary,
-            )
-            Spacer(Modifier.width(12.dp))
-            Column {
-                Text(
-                    stringResource(R.string.delivery_tip_title),
-                    fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.titleSmall,
-                )
-                Spacer(Modifier.height(3.dp))
-                Text(
-                    stringResource(R.string.delivery_tip_body),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.Top) {
+                Surface(
+                    modifier = Modifier.size(36.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.72f),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(19.dp),
+                        )
+                    }
+                }
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = body,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = onClick,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 46.dp),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
+                ),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary,
+                ),
+            ) {
+                Text(stringResource(R.string.open_device_setting))
             }
         }
     }

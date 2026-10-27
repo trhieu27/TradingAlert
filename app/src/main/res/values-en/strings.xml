@@ -39,8 +39,15 @@
     <string name="latest_signal_received_subtitle">Received from Firebase</string>
     <string name="latest_signal_empty_body">Your first notification will appear here.</string>
 
-    <string name="delivery_tip_title">Reliable background delivery</string>
-    <string name="delivery_tip_body">The server should send a data message with HIGH priority. Some devices also require autostart and disabled battery optimization.</string>
+    <string name="battery_optimization_title">Remove battery restriction</string>
+    <string name="battery_optimization_body">Allow the app to continue receiving and processing signals while the screen is off.</string>
+    <string name="background_activity_title">Allow background activity</string>
+    <string name="background_activity_body">This device is currently restricting the app’s background activity.</string>
+    <string name="background_data_title">Allow background data</string>
+    <string name="background_data_body">Data Saver is blocking the background connection required by Firebase.</string>
+    <string name="auto_start_title">Enable autostart</string>
+    <string name="auto_start_body">Open the manufacturer settings so the app can restart and receive signals.</string>
+    <string name="open_device_setting">Open settings</string>
 
     <string name="notification_permission_granted">Notifications enabled</string>
     <string name="notification_permission_denied">Notification permission was not granted</string>
