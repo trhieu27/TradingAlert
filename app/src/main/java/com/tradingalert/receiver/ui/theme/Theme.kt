@@ -8,31 +8,31 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF075FD8),
+    primary = Color(0xFF2563EB),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFD8E7FF),
-    onPrimaryContainer = Color(0xFF001A41),
-    secondary = Color(0xFF006A7D),
-    secondaryContainer = Color(0xFFB1ECFA),
-    tertiary = Color(0xFF8B5000),
-    background = Color(0xFFF6F8FC),
+    primaryContainer = Color(0xFFDCE8FF),
+    onPrimaryContainer = Color(0xFF0B2E70),
+    secondary = Color(0xFF007F95),
+    secondaryContainer = Color(0xFFC9F3FA),
+    tertiary = Color(0xFF9A5B00),
+    background = Color(0xFFF4F6F9),
     surface = Color(0xFFFFFFFF),
     surfaceVariant = Color(0xFFE7ECF4),
     outline = Color(0xFF747C8A),
 )
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFFA9C7FF),
-    onPrimary = Color(0xFF002F66),
-    primaryContainer = Color(0xFF00468F),
-    onPrimaryContainer = Color(0xFFD8E7FF),
-    secondary = Color(0xFF59D5ED),
-    secondaryContainer = Color(0xFF004E5C),
-    tertiary = Color(0xFFFFB95F),
-    background = Color(0xFF080C14),
-    surface = Color(0xFF101722),
-    surfaceVariant = Color(0xFF1A2433),
-    outline = Color(0xFF8D96A5),
+    primary = Color(0xFF5B8DEF),
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFF173B79),
+    onPrimaryContainer = Color(0xFFDCE8FF),
+    secondary = Color(0xFF22D3EE),
+    secondaryContainer = Color(0xFF073F49),
+    tertiary = Color(0xFFF59E0B),
+    background = Color(0xFF0B111E),
+    surface = Color(0xFF121A29),
+    surfaceVariant = Color(0xFF1A2435),
+    outline = Color(0xFF8E98AA),
 )
 
 @Composable

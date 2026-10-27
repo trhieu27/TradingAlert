@@ -14,13 +14,12 @@ import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.tradingalert.receiver.MainActivity
 import com.tradingalert.receiver.R
+import com.tradingalert.receiver.ui.alertreceiver.AlertReceiverActivity
 
 object NotificationHelper {
     const val CHANNEL_ID = "trading_alerts_v2"
     private const val LEGACY_CHANNEL_ID = "firebase_alerts"
-    private const val CHANNEL_NAME = "Cảnh báo giao dịch"
 
     fun soundUri(context: Context): Uri = Uri.parse(
         "${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context.packageName}/${R.raw.trading_alert_chime}",
@@ -34,10 +33,10 @@ object NotificationHelper {
 
         val channel = NotificationChannel(
             CHANNEL_ID,
-            CHANNEL_NAME,
+            context.getString(R.string.notification_channel_name),
             NotificationManager.IMPORTANCE_HIGH,
         ).apply {
-            description = "Âm thanh riêng cho tín hiệu của Trading Alert Receiver"
+            description = context.getString(R.string.notification_channel_description)
             enableVibration(true)
             vibrationPattern = longArrayOf(0, 180, 100, 180)
             setSound(
@@ -70,7 +69,7 @@ object NotificationHelper {
             return false
         }
 
-        val openApp = Intent(context, MainActivity::class.java).apply {
+        val openApp = Intent(context, AlertReceiverActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             putExtra("notification_reference", message.reference)
         }

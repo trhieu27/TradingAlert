@@ -6,9 +6,13 @@ data class PushMessage(
     val reference: String? = null,
 ) {
     companion object {
-        fun from(data: Map<String, String>): PushMessage {
-            val title = data["title"].orEmpty().trim().ifEmpty { "Cảnh báo mới" }
-            val body = data["body"].orEmpty().trim().ifEmpty { "Bạn vừa nhận được tín hiệu mới." }
+        fun from(
+            data: Map<String, String>,
+            defaultTitle: String,
+            defaultBody: String,
+        ): PushMessage {
+            val title = data["title"].orEmpty().trim().ifEmpty { defaultTitle }
+            val body = data["body"].orEmpty().trim().ifEmpty { defaultBody }
             return PushMessage(
                 title = title.take(120),
                 body = body.take(500),
