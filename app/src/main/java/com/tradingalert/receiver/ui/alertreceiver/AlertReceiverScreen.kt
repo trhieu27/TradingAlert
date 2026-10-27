@@ -300,7 +300,10 @@ internal fun WideLayout(
 }
 
 @Preview(name = "Phone", device = Devices.PHONE, showBackground = true)
+@Preview(name = "Phone · Large font", device = Devices.PHONE, fontScale = 1.5f, showBackground = true)
+@Preview(name = "Foldable", device = Devices.FOLDABLE, showBackground = true)
 @Preview(name = "Tablet", device = Devices.TABLET, showBackground = true)
+@Preview(name = "Desktop", device = Devices.DESKTOP, showBackground = true)
 @Composable
 internal fun AlertReceiverContentPreview() {
     TradingAlertReceiverTheme {

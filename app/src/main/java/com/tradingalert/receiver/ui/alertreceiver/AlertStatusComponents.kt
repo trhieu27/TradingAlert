@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -173,7 +174,7 @@ internal fun StatusHero(allowed: Boolean, onRequestPermission: () -> Unit) {
         } else {
             Button(
                 onClick = onRequestPermission,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                 shape = RoundedCornerShape(15.dp),
             ) {
                 Icon(Icons.Rounded.NotificationsActive, contentDescription = null, modifier = Modifier.size(19.dp))
