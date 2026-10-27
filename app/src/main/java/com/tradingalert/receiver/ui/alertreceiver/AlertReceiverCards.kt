@@ -19,8 +19,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.BatteryAlert
 import androidx.compose.material.icons.rounded.CloudOff
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.DataUsage
 import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material.icons.rounded.PauseCircle
 import androidx.compose.material.icons.rounded.Settings
@@ -37,6 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -63,8 +66,11 @@ import kotlin.math.roundToInt
 internal fun QuickActionsCard(
     volumePercent: Int,
     soundDurationSeconds: Int,
+    selectedSoundName: String?,
     onVolumeChange: (Int) -> Unit,
     onSoundDurationChange: (Int) -> Unit,
+    onChooseAlertSound: () -> Unit,
+    onResetAlertSound: () -> Unit,
     onOpenSoundSettings: () -> Unit,
 ) {
     Card(
@@ -97,6 +103,39 @@ internal fun QuickActionsCard(
                 onValueChange = { onSoundDurationChange(it.roundToInt().coerceIn(1, 30)) },
             )
             Spacer(Modifier.height(10.dp))
+            OutlinedButton(
+                onClick = onChooseAlertSound,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                shape = RoundedCornerShape(15.dp),
+            ) {
+                Icon(Icons.Rounded.MusicNote, contentDescription = null)
+                Spacer(Modifier.width(10.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.alert_sound),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                    Text(
+                        text = selectedSoundName
+                            ?: stringResource(R.string.default_alert_sound),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Icon(Icons.Rounded.ChevronRight, contentDescription = null)
+            }
+            if (selectedSoundName != null) {
+                TextButton(
+                    onClick = onResetAlertSound,
+                    modifier = Modifier.align(Alignment.End),
+                ) {
+                    Text(stringResource(R.string.reset_alert_sound))
+                }
+            } else {
+                Spacer(Modifier.height(10.dp))
+            }
             OutlinedButton(
                 onClick = onOpenSoundSettings,
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),

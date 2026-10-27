@@ -24,11 +24,15 @@
     <string name="allow_notifications">Cho phép thông báo</string>
 
     <string name="alert_settings_title">Cài đặt cảnh báo</string>
-    <string name="alert_settings_subtitle">Tùy chỉnh âm lượng và thời lượng chuông</string>
+    <string name="alert_settings_subtitle">Tùy chỉnh âm thanh, âm lượng và thời lượng chuông</string>
     <string name="alert_volume">Âm lượng cảnh báo</string>
     <string name="alert_volume_value">%1$d%%</string>
     <string name="sound_duration">Thời lượng chuông</string>
     <string name="sound_duration_value">%1$d giây</string>
+    <string name="alert_sound">Âm thanh thông báo</string>
+    <string name="default_alert_sound">Chuông mặc định của app</string>
+    <string name="custom_alert_sound">Âm thanh tùy chỉnh</string>
+    <string name="reset_alert_sound">Dùng chuông mặc định</string>
     <string name="app_sound_settings">Cài đặt thông báo hệ thống</string>
 
     <string name="token_loading">Đang lấy token…</string>

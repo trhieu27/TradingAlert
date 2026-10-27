@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -20,8 +21,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Notifications
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,6 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.tradingalert.receiver.R
 import com.tradingalert.receiver.localization.AppLanguage
 import com.tradingalert.receiver.ui.theme.TradingAlertReceiverTheme
@@ -67,6 +67,8 @@ internal fun AlertReceiverContent(
     onRequestPermission: () -> Unit,
     onVolumeChange: (Int) -> Unit,
     onSoundDurationChange: (Int) -> Unit,
+    onChooseAlertSound: () -> Unit,
+    onResetAlertSound: () -> Unit,
     onOpenSoundSettings: () -> Unit,
     onOpenBatteryOptimizationSettings: () -> Unit,
     onOpenBackgroundActivitySettings: () -> Unit,
@@ -146,6 +148,8 @@ internal fun AlertReceiverContent(
                     onRequestPermission = onRequestPermission,
                     onVolumeChange = onVolumeChange,
                     onSoundDurationChange = onSoundDurationChange,
+                    onChooseAlertSound = onChooseAlertSound,
+                    onResetAlertSound = onResetAlertSound,
                     onOpenSoundSettings = onOpenSoundSettings,
                     onOpenBatteryOptimizationSettings = onOpenBatteryOptimizationSettings,
                     onOpenBackgroundActivitySettings = onOpenBackgroundActivitySettings,
@@ -159,6 +163,8 @@ internal fun AlertReceiverContent(
                     onRequestPermission = onRequestPermission,
                     onVolumeChange = onVolumeChange,
                     onSoundDurationChange = onSoundDurationChange,
+                    onChooseAlertSound = onChooseAlertSound,
+                    onResetAlertSound = onResetAlertSound,
                     onOpenSoundSettings = onOpenSoundSettings,
                     onOpenBatteryOptimizationSettings = onOpenBatteryOptimizationSettings,
                     onOpenBackgroundActivitySettings = onOpenBackgroundActivitySettings,
@@ -179,20 +185,39 @@ private fun NotificationHistoryButton(
         onClick = onClick,
         modifier = Modifier.size(40.dp),
     ) {
-        BadgedBox(
-            badge = {
-                if (notificationCount > 0) {
-                    Badge {
-                        Text(if (notificationCount > 99) "99+" else notificationCount.toString())
-                    }
-                }
-            },
+        androidx.compose.foundation.layout.Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Rounded.Notifications,
                 contentDescription = stringResource(R.string.notification_history_open),
                 modifier = Modifier.size(26.dp),
             )
+            if (notificationCount > 0) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 3.dp, end = 3.dp)
+                        .defaultMinSize(minWidth = 18.dp, minHeight = 18.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                ) {
+                    androidx.compose.foundation.layout.Box(
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = if (notificationCount > 99) "99+" else notificationCount.toString(),
+                            fontSize = 9.sp,
+                            lineHeight = 10.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -280,6 +305,8 @@ internal fun PhoneLayout(
     onRequestPermission: () -> Unit,
     onVolumeChange: (Int) -> Unit,
     onSoundDurationChange: (Int) -> Unit,
+    onChooseAlertSound: () -> Unit,
+    onResetAlertSound: () -> Unit,
     onOpenSoundSettings: () -> Unit,
     onOpenBatteryOptimizationSettings: () -> Unit,
     onOpenBackgroundActivitySettings: () -> Unit,
@@ -300,8 +327,11 @@ internal fun PhoneLayout(
                 QuickActionsCard(
                     volumePercent = state.alertVolumePercent,
                     soundDurationSeconds = state.soundDurationSeconds,
+                    selectedSoundName = state.alertSoundName,
                     onVolumeChange = onVolumeChange,
                     onSoundDurationChange = onSoundDurationChange,
+                    onChooseAlertSound = onChooseAlertSound,
+                    onResetAlertSound = onResetAlertSound,
                     onOpenSoundSettings = onOpenSoundSettings,
                 )
             }
@@ -327,6 +357,8 @@ internal fun WideLayout(
     onRequestPermission: () -> Unit,
     onVolumeChange: (Int) -> Unit,
     onSoundDurationChange: (Int) -> Unit,
+    onChooseAlertSound: () -> Unit,
+    onResetAlertSound: () -> Unit,
     onOpenSoundSettings: () -> Unit,
     onOpenBatteryOptimizationSettings: () -> Unit,
     onOpenBackgroundActivitySettings: () -> Unit,
@@ -372,8 +404,11 @@ internal fun WideLayout(
                     QuickActionsCard(
                         volumePercent = state.alertVolumePercent,
                         soundDurationSeconds = state.soundDurationSeconds,
+                        selectedSoundName = state.alertSoundName,
                         onVolumeChange = onVolumeChange,
                         onSoundDurationChange = onSoundDurationChange,
+                        onChooseAlertSound = onChooseAlertSound,
+                        onResetAlertSound = onResetAlertSound,
                         onOpenSoundSettings = onOpenSoundSettings,
                     )
                 }
@@ -408,6 +443,8 @@ internal fun AlertReceiverContentPreview() {
             onRequestPermission = {},
             onVolumeChange = {},
             onSoundDurationChange = {},
+            onChooseAlertSound = {},
+            onResetAlertSound = {},
             onOpenSoundSettings = {},
             onOpenBatteryOptimizationSettings = {},
             onOpenBackgroundActivitySettings = {},

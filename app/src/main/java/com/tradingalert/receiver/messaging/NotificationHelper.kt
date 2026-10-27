@@ -126,6 +126,7 @@ object NotificationHelper {
                 context = context,
                 volumePercent = alertPreferences.volumePercent,
                 durationSeconds = alertPreferences.soundDurationSeconds,
+                customSoundUri = alertPreferences.soundUri,
             )
         }
         return true
@@ -142,6 +143,7 @@ object NotificationHelper {
         context: Context,
         volumePercent: Int,
         durationSeconds: Int,
+        customSoundUri: String?,
     ) {
         mainHandler.post {
             stopActiveSound()
@@ -150,12 +152,8 @@ object NotificationHelper {
                 .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
-            val player = MediaPlayer.create(
-                context.applicationContext,
-                R.raw.trading_alert_chime,
-                audioAttributes,
-                0,
-            ) ?: return@post
+            val player = createAlertPlayer(context, customSoundUri, audioAttributes)
+                ?: return@post
             val volume = volumePercent.coerceIn(0, 100) / 100f
             player.setVolume(volume, volume)
             player.isLooping = true
@@ -177,6 +175,30 @@ object NotificationHelper {
                 ) * 1_000L,
             )
         }
+    }
+
+    private fun createAlertPlayer(
+        context: Context,
+        customSoundUri: String?,
+        audioAttributes: AudioAttributes,
+    ): MediaPlayer? {
+        val customPlayer = customSoundUri?.let { uriText ->
+            runCatching {
+                MediaPlayer.create(
+                    context.applicationContext,
+                    Uri.parse(uriText),
+                    null,
+                    audioAttributes,
+                    0,
+                )
+            }.getOrNull()
+        }
+        return customPlayer ?: MediaPlayer.create(
+            context.applicationContext,
+            R.raw.trading_alert_chime,
+            audioAttributes,
+            0,
+        )
     }
 
     private fun stopActiveSound() {

@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.provider.Settings
 import android.view.View
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -222,6 +223,27 @@ private fun AlertReceiverRoute(
         }
     }
 
+    val soundPickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        runCatching {
+            activity.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION,
+            )
+        }
+        state.alertSoundUri
+            ?.takeIf { previous -> previous != uri.toString() }
+            ?.let(activity::releasePersistedSoundPermission)
+        AlertPreferenceStore.setSound(
+            context = context,
+            uri = uri.toString(),
+            name = activity.soundDisplayName(uri),
+        )
+        refresh()
+    }
+
     LaunchedEffect(Unit) {
         runCatching { FirebaseMessaging.getInstance() }
             .onSuccess { messaging ->
@@ -271,6 +293,8 @@ private fun AlertReceiverRoute(
                     AlertMessagingService.KEY_LAST_TIME,
                     AlertPreferenceStore.KEY_VOLUME_PERCENT,
                     AlertPreferenceStore.KEY_SOUND_DURATION_SECONDS,
+                    AlertPreferenceStore.KEY_SOUND_URI,
+                    AlertPreferenceStore.KEY_SOUND_NAME,
                 )
             ) {
                 refresh()
@@ -323,6 +347,14 @@ private fun AlertReceiverRoute(
                         AlertPreferenceStore.setSoundDurationSeconds(context, durationSeconds)
                         state = state.copy(soundDurationSeconds = durationSeconds)
                     },
+                    onChooseAlertSound = {
+                        soundPickerLauncher.launch(arrayOf("audio/*"))
+                    },
+                    onResetAlertSound = {
+                        state.alertSoundUri?.let(activity::releasePersistedSoundPermission)
+                        AlertPreferenceStore.resetSound(context)
+                        refresh()
+                    },
                     onOpenSoundSettings = {
                         NotificationHelper.createChannel(context)
                         activity.startActivity(alertSoundSettingsIntent(context))
@@ -369,6 +401,34 @@ private fun alertSoundSettingsIntent(context: Context): Intent =
             Uri.parse("package:${context.packageName}"),
         )
     }
+
+private fun Context.soundDisplayName(uri: Uri): String {
+    val displayName = runCatching {
+        contentResolver.query(
+            uri,
+            arrayOf(OpenableColumns.DISPLAY_NAME),
+            null,
+            null,
+            null,
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) cursor.getString(0) else null
+        }
+    }.getOrNull()
+    return displayName
+        ?.trim()
+        ?.takeIf(String::isNotEmpty)
+        ?.take(120)
+        ?: getString(R.string.custom_alert_sound)
+}
+
+private fun Context.releasePersistedSoundPermission(uriText: String) {
+    runCatching {
+        contentResolver.releasePersistableUriPermission(
+            Uri.parse(uriText),
+            Intent.FLAG_GRANT_READ_URI_PERMISSION,
+        )
+    }
+}
 
 private fun appNotificationSettingsIntent(context: Context): Intent =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
