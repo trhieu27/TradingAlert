@@ -39,7 +39,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -69,8 +68,6 @@ internal fun QuickActionsCard(
     selectedSoundName: String?,
     onVolumeChange: (Int) -> Unit,
     onSoundDurationChange: (Int) -> Unit,
-    onChooseAlertSound: () -> Unit,
-    onResetAlertSound: () -> Unit,
     onOpenSoundSettings: () -> Unit,
 ) {
     Card(
@@ -91,7 +88,9 @@ internal fun QuickActionsCard(
                 valueLabel = stringResource(R.string.alert_volume_value, volumePercent),
                 value = volumePercent.toFloat(),
                 valueRange = 0f..100f,
-                onValueChange = { onVolumeChange(((it / 10f).roundToInt() * 10).coerceIn(0, 100)) },
+                onValueChange = {
+                    onVolumeChange(((it / 10f).roundToInt() * 10).coerceIn(0, 100))
+                },
             )
             Spacer(Modifier.height(8.dp))
             AlertSettingSlider(
@@ -100,11 +99,13 @@ internal fun QuickActionsCard(
                 valueLabel = stringResource(R.string.sound_duration_value, soundDurationSeconds),
                 value = soundDurationSeconds.toFloat(),
                 valueRange = 1f..30f,
-                onValueChange = { onSoundDurationChange(it.roundToInt().coerceIn(1, 30)) },
+                onValueChange = {
+                    onSoundDurationChange(it.roundToInt().coerceIn(1, 30))
+                },
             )
             Spacer(Modifier.height(10.dp))
             OutlinedButton(
-                onClick = onChooseAlertSound,
+                onClick = onOpenSoundSettings,
                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                 shape = RoundedCornerShape(15.dp),
             ) {
@@ -125,25 +126,6 @@ internal fun QuickActionsCard(
                     )
                 }
                 Icon(Icons.Rounded.ChevronRight, contentDescription = null)
-            }
-            if (selectedSoundName != null) {
-                TextButton(
-                    onClick = onResetAlertSound,
-                    modifier = Modifier.align(Alignment.End),
-                ) {
-                    Text(stringResource(R.string.reset_alert_sound))
-                }
-            } else {
-                Spacer(Modifier.height(10.dp))
-            }
-            OutlinedButton(
-                onClick = onOpenSoundSettings,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                shape = RoundedCornerShape(15.dp),
-            ) {
-                Icon(Icons.AutoMirrored.Rounded.VolumeUp, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.app_sound_settings))
             }
         }
     }

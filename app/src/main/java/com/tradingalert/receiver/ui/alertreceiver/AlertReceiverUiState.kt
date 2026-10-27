@@ -5,6 +5,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.tradingalert.receiver.R
 import com.tradingalert.receiver.messaging.AlertMessagingService
 import com.tradingalert.receiver.messaging.AlertPreferenceStore
+import com.tradingalert.receiver.messaging.NotificationHelper
 import com.tradingalert.receiver.data.notification.NotificationHistoryItem
 
 internal data class AlertReceiverUiState(
@@ -15,7 +16,6 @@ internal data class AlertReceiverUiState(
     val historyLoading: Boolean = false,
     val alertVolumePercent: Int = AlertPreferenceStore.DEFAULT_VOLUME_PERCENT,
     val soundDurationSeconds: Int = AlertPreferenceStore.DEFAULT_SOUND_DURATION_SECONDS,
-    val alertSoundUri: String? = null,
     val alertSoundName: String? = null,
     val batteryOptimizationRequired: Boolean = false,
     val backgroundActivityRestricted: Boolean = false,
@@ -38,8 +38,7 @@ internal fun loadAlertReceiverState(context: Context): AlertReceiverUiState {
         tokenUpdatedAt = prefs.getLong(AlertMessagingService.KEY_TOKEN_TIME, 0L),
         alertVolumePercent = alertPreferences.volumePercent,
         soundDurationSeconds = alertPreferences.soundDurationSeconds,
-        alertSoundUri = alertPreferences.soundUri,
-        alertSoundName = alertPreferences.soundName,
+        alertSoundName = NotificationHelper.channelSoundName(context),
         batteryOptimizationRequired = DeviceReliabilitySettings.isBatteryOptimizationRequired(context),
         backgroundActivityRestricted = DeviceReliabilitySettings.isBackgroundActivityRestricted(context),
         backgroundDataRestricted = DeviceReliabilitySettings.isBackgroundDataRestricted(context),

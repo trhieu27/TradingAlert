@@ -30,10 +30,9 @@
     <string name="sound_duration">Sound duration</string>
     <string name="sound_duration_value">%1$d seconds</string>
     <string name="alert_sound">Notification sound</string>
-    <string name="default_alert_sound">App default sound</string>
-    <string name="custom_alert_sound">Custom sound</string>
-    <string name="reset_alert_sound">Use default sound</string>
-    <string name="app_sound_settings">System notification settings</string>
+    <string name="default_alert_sound">System default notification sound</string>
+    <string name="custom_alert_sound">System notification sound</string>
+    <string name="system_sound_none">None</string>
 
     <string name="token_loading">Getting token…</string>
     <string name="token_fetch_failed">No token available. Check Firebase and your network connection.</string>
