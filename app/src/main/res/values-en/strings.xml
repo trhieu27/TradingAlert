@@ -40,6 +40,10 @@
     <string name="token_fetch_failed">No token available. Check Firebase and your network connection.</string>
     <string name="server_config_failed">Unable to load messaging configuration from the server.</string>
     <string name="server_not_configured">Backend URL is not configured.</string>
+    <string name="backend_setup_title">Set up signal delivery</string>
+    <string name="backend_setup_description">Welcome to Trading Alert. To receive alerts, enter the HTTPS base URL provided by your backend. The app will verify the connection, load the Firebase configuration, and subscribe to the signal channel before continuing.</string>
+    <string name="backend_setup_continue">Connect and continue</string>
+    <string name="backend_setup_skip">Skip for now</string>
     <string name="backend_config_title">Backend configuration</string>
     <string name="backend_config_description">Enter the HTTPS base URL provided by the backend. Example: https://alerts.example.com\n\nDo not include /config or /webhooks/tradingview; the app adds the required path and validates the connection before saving.</string>
     <string name="backend_url_label">Backend URL</string>

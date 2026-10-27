@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.LazyColumn
@@ -52,6 +51,8 @@ internal fun BackendConfigScreen(
     initialUrl: String,
     isSaving: Boolean,
     saveFailed: Boolean,
+    requiredSetup: Boolean = false,
+    onSkip: (() -> Unit)? = null,
     onSave: (String) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -80,98 +81,128 @@ internal fun BackendConfigScreen(
                 ),
                 title = {
                     Text(
-                        text = stringResource(R.string.backend_config_title),
+                        text = stringResource(
+                            if (requiredSetup) {
+                                R.string.backend_setup_title
+                            } else {
+                                R.string.backend_config_title
+                            },
+                        ),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack, enabled = !isSaving) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
-                        )
+                    if (!requiredSetup) {
+                        IconButton(onClick = onBack, enabled = !isSaving) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                                contentDescription = stringResource(R.string.back),
+                            )
+                        }
                     }
                 },
             )
         },
     ) { innerPadding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .imePadding(),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(innerPadding),
         ) {
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Icon(
-                        imageVector = Icons.Rounded.CloudQueue,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.secondary,
-                    )
-                    Text(
-                        text = stringResource(R.string.backend_config_description),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            item {
-                OutlinedTextField(
-                    value = url,
-                    onValueChange = {
-                        url = it
-                        showRequiredError = false
-                        editedSinceFailure = true
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isSaving,
-                    singleLine = true,
-                    label = { Text(stringResource(R.string.backend_url_label)) },
-                    placeholder = { Text(stringResource(R.string.backend_url_placeholder)) },
-                    isError = showRequiredError || showSaveError,
-                    supportingText = when {
-                        showRequiredError -> {
-                            { Text(stringResource(R.string.backend_url_required)) }
-                        }
-                        showSaveError -> {
-                            { Text(stringResource(R.string.backend_save_failed)) }
-                        }
-                        else -> null
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Uri,
-                        imeAction = ImeAction.Done,
-                    ),
-                    keyboardActions = KeyboardActions(onDone = { submit() }),
-                    shape = RoundedCornerShape(16.dp),
-                )
-            }
-            val previewBaseUrl = url.trim().trimEnd('/').removeSuffix("/config")
-            if (previewBaseUrl.isNotEmpty()) {
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
                 item {
-                    Column {
-                        Text(
-                            text = stringResource(R.string.backend_config_endpoint, previewBaseUrl),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Icon(
+                            imageVector = Icons.Rounded.CloudQueue,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.secondary,
                         )
-                        Spacer(Modifier.height(6.dp))
                         Text(
-                            text = stringResource(R.string.backend_webhook_endpoint, previewBaseUrl),
-                            style = MaterialTheme.typography.bodySmall,
+                            text = stringResource(
+                                if (requiredSetup) {
+                                    R.string.backend_setup_description
+                                } else {
+                                    R.string.backend_config_description
+                                },
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
+                item {
+                    OutlinedTextField(
+                        value = url,
+                        onValueChange = {
+                            url = it
+                            showRequiredError = false
+                            editedSinceFailure = true
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !isSaving,
+                        singleLine = true,
+                        label = { Text(stringResource(R.string.backend_url_label)) },
+                        placeholder = { Text(stringResource(R.string.backend_url_placeholder)) },
+                        isError = showRequiredError || showSaveError,
+                        supportingText = when {
+                            showRequiredError -> {
+                                { Text(stringResource(R.string.backend_url_required)) }
+                            }
+                            showSaveError -> {
+                                { Text(stringResource(R.string.backend_save_failed)) }
+                            }
+                            else -> null
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Uri,
+                            imeAction = ImeAction.Done,
+                        ),
+                        keyboardActions = KeyboardActions(onDone = { submit() }),
+                        shape = RoundedCornerShape(16.dp),
+                    )
+                }
+                val previewBaseUrl = url.trim().trimEnd('/').removeSuffix("/config")
+                if (previewBaseUrl.isNotEmpty()) {
+                    item {
+                        Column {
+                            Text(
+                                text = stringResource(R.string.backend_config_endpoint, previewBaseUrl),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                text = stringResource(R.string.backend_webhook_endpoint, previewBaseUrl),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
             }
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                if (requiredSetup && onSkip != null) {
+                    OutlinedButton(
+                        onClick = onSkip,
+                        enabled = !isSaving,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(14.dp),
+                    ) {
+                        Text(stringResource(R.string.backend_setup_skip))
+                    }
+                } else if (!requiredSetup) {
                     OutlinedButton(
                         onClick = onBack,
                         enabled = !isSaving,
@@ -180,20 +211,28 @@ internal fun BackendConfigScreen(
                     ) {
                         Text(stringResource(R.string.backend_cancel))
                     }
-                    Button(
-                        onClick = { submit() },
-                        enabled = !isSaving,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(14.dp),
-                    ) {
-                        if (isSaving) {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                strokeWidth = 2.dp,
-                            )
-                        } else {
-                            Text(stringResource(R.string.backend_save))
-                        }
+                }
+                Button(
+                    onClick = { submit() },
+                    enabled = !isSaving && (!requiredSetup || url.isNotBlank()),
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(14.dp),
+                ) {
+                    if (isSaving) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp,
+                        )
+                    } else {
+                        Text(
+                            stringResource(
+                                if (requiredSetup) {
+                                    R.string.backend_setup_continue
+                                } else {
+                                    R.string.backend_save
+                                },
+                            ),
+                        )
                     }
                 }
             }

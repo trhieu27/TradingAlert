@@ -34,13 +34,18 @@ import com.tradingalert.receiver.R
 
 @Composable
 internal fun ConnectionStrip(state: AlertReceiverUiState) {
-    val connected = isUsableToken(state.token)
+    val connected = state.firebaseConnected
     val tokenLoading = !connected && state.token == stringResource(R.string.token_loading)
     val connecting = state.tokenRefreshing || tokenLoading
     val statusLabel = when {
         connecting -> stringResource(R.string.connection_connecting)
         connected -> stringResource(R.string.connection_live)
         else -> stringResource(R.string.connection_waiting)
+    }
+    val subtitle = when {
+        connecting -> null
+        state.serverBaseUrl.isNullOrBlank() -> stringResource(R.string.connection_backend_required)
+        else -> stringResource(R.string.connection_subtitle)
     }
     val statusColor = when {
         connected && !connecting -> Color(0xFF34D399)
@@ -79,18 +84,14 @@ internal fun ConnectionStrip(state: AlertReceiverUiState) {
                     stringResource(R.string.connection_title),
                     style = MaterialTheme.typography.labelLarge,
                 )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    stringResource(
-                        if (state.serverBaseUrl.isNullOrBlank()) {
-                            R.string.connection_backend_required
-                        } else {
-                            R.string.connection_subtitle
-                        },
-                    ),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                subtitle?.let {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
             Surface(
                 shape = CircleShape,

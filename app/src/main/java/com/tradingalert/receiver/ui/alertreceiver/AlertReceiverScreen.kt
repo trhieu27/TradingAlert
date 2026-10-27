@@ -324,8 +324,10 @@ internal fun PhoneLayout(
     ) {
         item { ConnectionStrip(state) }
         if (state.notificationsAllowed) {
-            item {
-                if (state.historyLoading) LastMessageLoadingCard() else LastMessageCard(state)
+            if (state.firebaseConnected) {
+                item {
+                    if (state.historyLoading) LastMessageLoadingCard() else LastMessageCard(state)
+                }
             }
             item {
                 QuickActionsCard(
@@ -410,8 +412,10 @@ internal fun WideLayout(
                         onOpenSoundSettings = onOpenSoundSettings,
                     )
                 }
-                item {
-                    if (state.historyLoading) LastMessageLoadingCard() else LastMessageCard(state)
+                if (state.firebaseConnected) {
+                    item {
+                        if (state.historyLoading) LastMessageLoadingCard() else LastMessageCard(state)
+                    }
                 }
             }
         }
@@ -431,6 +435,7 @@ internal fun AlertReceiverContentPreview() {
                 notificationsAllowed = true,
                 token = "fcm_preview_token_1234567890_abcdefghijklmnopqrstuvwxyz",
                 tokenUpdatedAt = System.currentTimeMillis(),
+                serverBaseUrl = "https://alerts.example.com",
                 lastTitle = stringResource(R.string.preview_signal_title),
                 lastBody = stringResource(R.string.preview_signal_body),
                 lastTime = System.currentTimeMillis(),

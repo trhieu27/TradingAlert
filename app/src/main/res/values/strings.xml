@@ -40,6 +40,10 @@
     <string name="token_fetch_failed">Chưa có token. Kiểm tra Firebase và kết nối mạng.</string>
     <string name="server_config_failed">Không tải được cấu hình nhận tin từ server.</string>
     <string name="server_not_configured">Chưa cấu hình URL backend.</string>
+    <string name="backend_setup_title">Thiết lập nhận tín hiệu</string>
+    <string name="backend_setup_description">Chào mừng bạn đến với Trading Alert. Để nhận cảnh báo, hãy nhập URL gốc HTTPS do backend cung cấp. App sẽ kiểm tra kết nối, tải cấu hình Firebase và đăng ký kênh tín hiệu trước khi tiếp tục.</string>
+    <string name="backend_setup_continue">Kết nối và tiếp tục</string>
+    <string name="backend_setup_skip">Bỏ qua</string>
     <string name="backend_config_title">Cấu hình backend</string>
     <string name="backend_config_description">Nhập URL gốc HTTPS do backend cung cấp. Ví dụ: https://alerts.example.com\n\nKhông nhập /config hoặc /webhooks/tradingview; app sẽ tự thêm đường dẫn cần thiết và kiểm tra kết nối trước khi lưu.</string>
     <string name="backend_url_label">URL backend</string>

@@ -71,6 +71,9 @@ private data object NotificationHistoryRoute : NavKey
 @Serializable
 private data object BackendConfigRoute : NavKey
 
+@Serializable
+private data object BackendSetupRoute : NavKey
+
 class AlertReceiverActivity : ComponentActivity() {
     private var notificationSettingsWatcher: Job? = null
 
@@ -326,7 +329,17 @@ private fun AlertReceiverRoute(
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { refresh() }
 
-    val backStack = rememberNavBackStack(AlertHomeRoute)
+    val initialRoute: NavKey = remember {
+        if (
+            state.serverBaseUrl.isNullOrBlank() &&
+            !BackendOnboardingStore.isCompleted(context)
+        ) {
+            BackendSetupRoute
+        } else {
+            AlertHomeRoute
+        }
+    }
+    val backStack = rememberNavBackStack(initialRoute)
     var backNavigationLocked by remember { mutableStateOf(false) }
     var backUnlockDestination by remember { mutableStateOf<NavKey?>(null) }
     val navigateBack: () -> Unit = {
@@ -337,6 +350,26 @@ private fun AlertReceiverRoute(
                 backStack.removeLastOrNull()
             } else {
                 activity.finish()
+            }
+        }
+    }
+    val saveBackend: (String, () -> Unit) -> Unit = { url, onConnected ->
+        backendConfigSaving = true
+        backendConfigSaveFailed = false
+        scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                MessagingServerConfig.validateAndSaveServer(context, url)
+            }
+            backendConfigSaving = false
+            result.onSuccess { config ->
+                state = state.copy(
+                    serverBaseUrl = MessagingServerConfig.serverBaseUrl(context),
+                )
+                onConnected()
+                showMessage(backendSaveSuccessMessage)
+                refreshFirebaseToken(config)
+            }.onFailure {
+                backendConfigSaveFailed = true
             }
         }
     }
@@ -433,6 +466,27 @@ private fun AlertReceiverRoute(
                     onBack = navigateBack,
                 )
             }
+            entry<BackendSetupRoute> {
+                BackendConfigScreen(
+                    initialUrl = state.serverBaseUrl.orEmpty(),
+                    isSaving = backendConfigSaving,
+                    saveFailed = backendConfigSaveFailed,
+                    requiredSetup = true,
+                    onSkip = {
+                        BackendOnboardingStore.markCompleted(context)
+                        backStack.add(AlertHomeRoute)
+                        backStack.remove(BackendSetupRoute)
+                    },
+                    onSave = { url ->
+                        saveBackend(url) {
+                            BackendOnboardingStore.markCompleted(context)
+                            backStack.add(AlertHomeRoute)
+                            backStack.remove(BackendSetupRoute)
+                        }
+                    },
+                    onBack = activity::finish,
+                )
+            }
             entry<BackendConfigRoute> {
                 UnlockBackNavigationOnResume(
                     enabled = backNavigationLocked && backUnlockDestination == BackendConfigRoute,
@@ -448,24 +502,7 @@ private fun AlertReceiverRoute(
                     isSaving = backendConfigSaving,
                     saveFailed = backendConfigSaveFailed,
                     onSave = { url ->
-                        backendConfigSaving = true
-                        backendConfigSaveFailed = false
-                        scope.launch {
-                            val result = withContext(Dispatchers.IO) {
-                                MessagingServerConfig.validateAndSaveServer(context, url)
-                            }
-                            backendConfigSaving = false
-                            result.onSuccess { config ->
-                                state = state.copy(
-                                    serverBaseUrl = MessagingServerConfig.serverBaseUrl(context),
-                                )
-                                showMessage(backendSaveSuccessMessage)
-                                navigateBack()
-                                refreshFirebaseToken(config)
-                            }.onFailure {
-                                backendConfigSaveFailed = true
-                            }
-                        }
+                        saveBackend(url, navigateBack)
                     },
                     onBack = navigateBack,
                 )

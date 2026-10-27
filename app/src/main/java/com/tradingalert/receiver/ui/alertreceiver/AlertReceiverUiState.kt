@@ -30,6 +30,11 @@ internal data class AlertReceiverUiState(
     val lastBody: String? = null,
     val lastTime: Long = 0L,
 ) {
+    val firebaseConnected: Boolean
+        get() = !serverBaseUrl.isNullOrBlank() &&
+            !tokenRefreshing &&
+            isUsableToken(token)
+
     val unreadNotificationCount: Int
         get() {
             val newestId = notificationHistory.maxOfOrNull(NotificationHistoryItem::id)
