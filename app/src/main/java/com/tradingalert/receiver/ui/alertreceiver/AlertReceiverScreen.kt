@@ -293,7 +293,9 @@ internal fun PhoneLayout(
     ) {
         item { ConnectionStrip(state) }
         if (state.notificationsAllowed) {
-            item { LastMessageCard(state) }
+            item {
+                if (state.historyLoading) LastMessageLoadingCard() else LastMessageCard(state)
+            }
             item {
                 QuickActionsCard(
                     volumePercent = state.alertVolumePercent,
@@ -375,7 +377,9 @@ internal fun WideLayout(
                         onOpenSoundSettings = onOpenSoundSettings,
                     )
                 }
-                item { LastMessageCard(state) }
+                item {
+                    if (state.historyLoading) LastMessageLoadingCard() else LastMessageCard(state)
+                }
             }
         }
     }

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -35,13 +36,14 @@ import com.tradingalert.receiver.R
 internal fun ConnectionStrip(state: AlertReceiverUiState) {
     val connected = isUsableToken(state.token)
     val tokenLoading = !connected && state.token == stringResource(R.string.token_loading)
+    val connecting = state.tokenRefreshing || tokenLoading
     val statusLabel = when {
-        state.tokenRefreshing || tokenLoading -> stringResource(R.string.connection_connecting)
+        connecting -> stringResource(R.string.connection_connecting)
         connected -> stringResource(R.string.connection_live)
         else -> stringResource(R.string.connection_waiting)
     }
     val statusColor = when {
-        connected -> Color(0xFF34D399)
+        connected && !connecting -> Color(0xFF34D399)
         else -> MaterialTheme.colorScheme.tertiary
     }
     Surface(
@@ -57,12 +59,20 @@ internal fun ConnectionStrip(state: AlertReceiverUiState) {
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                Icons.Rounded.CloudDone,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = statusColor,
-            )
+            if (connecting) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
+                    color = statusColor,
+                )
+            } else {
+                Icon(
+                    Icons.Rounded.CloudDone,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = statusColor,
+                )
+            }
             Spacer(Modifier.width(9.dp))
             Column(Modifier.weight(1f)) {
                 Text(

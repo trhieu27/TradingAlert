@@ -178,7 +178,14 @@ private fun AlertReceiverRoute(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    var state by remember { mutableStateOf(loadAlertReceiverState(context)) }
+    var state by remember {
+        mutableStateOf(
+            loadAlertReceiverState(context).copy(
+                tokenRefreshing = true,
+                historyLoading = true,
+            ),
+        )
+    }
     val permissionGrantedMessage = stringResource(R.string.notification_permission_granted)
     val permissionDeniedMessage = stringResource(R.string.notification_permission_denied)
     val tokenFetchFailedMessage = stringResource(R.string.token_fetch_failed)
@@ -194,6 +201,7 @@ private fun AlertReceiverRoute(
             token = if (isUsableToken(state.token) && !isUsableToken(persisted.token)) state.token else persisted.token,
             tokenUpdatedAt = maxOf(state.tokenUpdatedAt, persisted.tokenUpdatedAt),
             tokenRefreshing = state.tokenRefreshing,
+            historyLoading = state.historyLoading,
         )
     }
 
@@ -215,7 +223,6 @@ private fun AlertReceiverRoute(
     }
 
     LaunchedEffect(Unit) {
-        state = state.copy(tokenRefreshing = true)
         runCatching { FirebaseMessaging.getInstance() }
             .onSuccess { messaging ->
                 messaging.token.addOnCompleteListener { task ->
@@ -246,7 +253,10 @@ private fun AlertReceiverRoute(
 
     LaunchedEffect(context) {
         NotificationHistoryRepository.observe(context).collectLatest { history ->
-            state = state.copy(notificationHistory = history)
+            state = state.copy(
+                notificationHistory = history,
+                historyLoading = false,
+            )
         }
     }
 
@@ -339,6 +349,7 @@ private fun AlertReceiverRoute(
             entry<NotificationHistoryRoute> {
                 NotificationHistoryScreen(
                     items = state.notificationHistory,
+                    isLoading = state.historyLoading,
                     onBack = navigateBack,
                 )
             }

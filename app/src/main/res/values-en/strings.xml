@@ -8,6 +8,7 @@
     <string name="notification_history_open">Open notification history</string>
     <string name="notification_history_title">Notification history</string>
     <string name="notification_history_empty">No notifications received yet.</string>
+    <string name="notification_history_loading">Loading notification history…</string>
     <string name="expand_notification_image">Show notification image</string>
     <string name="collapse_notification_image">Hide notification image</string>
     <string name="back">Back</string>
@@ -38,6 +39,7 @@
     <string name="latest_signal_empty_subtitle">No data yet</string>
     <string name="latest_signal_received_subtitle">Received from Firebase</string>
     <string name="latest_signal_empty_body">Your first notification will appear here.</string>
+    <string name="latest_signal_loading">Loading the latest notification…</string>
 
     <string name="battery_optimization_title">Remove battery restriction</string>
     <string name="battery_optimization_body">Allow the app to continue receiving and processing signals while the screen is off.</string>

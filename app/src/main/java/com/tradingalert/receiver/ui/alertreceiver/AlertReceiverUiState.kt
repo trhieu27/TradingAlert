@@ -12,6 +12,7 @@ internal data class AlertReceiverUiState(
     val token: String = "",
     val tokenUpdatedAt: Long = 0L,
     val tokenRefreshing: Boolean = false,
+    val historyLoading: Boolean = false,
     val alertVolumePercent: Int = AlertPreferenceStore.DEFAULT_VOLUME_PERCENT,
     val soundDurationSeconds: Int = AlertPreferenceStore.DEFAULT_SOUND_DURATION_SECONDS,
     val batteryOptimizationRequired: Boolean = false,

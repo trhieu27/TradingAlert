@@ -8,6 +8,7 @@
     <string name="notification_history_open">Mở lịch sử thông báo</string>
     <string name="notification_history_title">Lịch sử thông báo</string>
     <string name="notification_history_empty">Chưa nhận được thông báo nào.</string>
+    <string name="notification_history_loading">Đang tải lịch sử thông báo…</string>
     <string name="expand_notification_image">Mở ảnh thông báo</string>
     <string name="collapse_notification_image">Thu gọn ảnh thông báo</string>
     <string name="back">Quay lại</string>
@@ -38,6 +39,7 @@
     <string name="latest_signal_empty_subtitle">Chưa có dữ liệu</string>
     <string name="latest_signal_received_subtitle">Đã nhận từ Firebase</string>
     <string name="latest_signal_empty_body">Thông báo đầu tiên sẽ xuất hiện tại đây.</string>
+    <string name="latest_signal_loading">Đang tải thông báo gần nhất…</string>
 
     <string name="battery_optimization_title">Bỏ giới hạn pin</string>
     <string name="battery_optimization_body">Cho phép app tiếp tục nhận và xử lý tín hiệu khi màn hình tắt.</string>

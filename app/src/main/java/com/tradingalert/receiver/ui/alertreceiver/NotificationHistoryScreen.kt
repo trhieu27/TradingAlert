@@ -29,6 +29,7 @@ import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.NotificationsNone
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,6 +63,7 @@ import java.util.Date
 @Composable
 internal fun NotificationHistoryScreen(
     items: List<NotificationHistoryItem>,
+    isLoading: Boolean,
     onBack: () -> Unit,
 ) {
     Scaffold(
@@ -89,7 +91,13 @@ internal fun NotificationHistoryScreen(
             )
         },
     ) { innerPadding ->
-        if (items.isEmpty()) {
+        if (isLoading) {
+            NotificationHistoryLoading(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+            )
+        } else if (items.isEmpty()) {
             EmptyNotificationHistory(
                 modifier = Modifier
                     .fillMaxSize()
@@ -112,6 +120,27 @@ internal fun NotificationHistoryScreen(
             ) {
                 items(items, key = { item -> item.id }) { item -> NotificationHistoryRow(item) }
             }
+        }
+    }
+}
+
+@Composable
+private fun NotificationHistoryLoading(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.padding(24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(28.dp),
+                strokeWidth = 2.5.dp,
+            )
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = stringResource(R.string.notification_history_loading),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
