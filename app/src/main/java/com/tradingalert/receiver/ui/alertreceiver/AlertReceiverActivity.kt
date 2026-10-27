@@ -221,20 +221,37 @@ private fun AlertReceiverRoute(
         }.onSuccess { messaging ->
             fun fetchCurrentToken() {
                 messaging.token.addOnCompleteListener { task ->
-                    state = if (task.isSuccessful) {
+                    if (task.isSuccessful) {
                         val token = task.result
-                        val now = System.currentTimeMillis()
-                        context.getSharedPreferences(
-                            AlertMessagingService.PREFS_NAME,
-                            Context.MODE_PRIVATE,
-                        )
-                            .edit()
-                            .putString(AlertMessagingService.KEY_TOKEN, token)
-                            .putLong(AlertMessagingService.KEY_TOKEN_TIME, now)
-                            .apply()
-                        state.copy(token = token, tokenUpdatedAt = now, tokenRefreshing = false)
+                        messaging.subscribeToTopic(AlertMessagingService.BROADCAST_TOPIC)
+                            .addOnCompleteListener { subscriptionTask ->
+                                state = if (subscriptionTask.isSuccessful) {
+                                    val now = System.currentTimeMillis()
+                                    context.getSharedPreferences(
+                                        AlertMessagingService.PREFS_NAME,
+                                        Context.MODE_PRIVATE,
+                                    )
+                                        .edit()
+                                        .putString(AlertMessagingService.KEY_TOKEN, token)
+                                        .putLong(AlertMessagingService.KEY_TOKEN_TIME, now)
+                                        .apply()
+                                    state.copy(
+                                        token = token,
+                                        tokenUpdatedAt = now,
+                                        tokenRefreshing = false,
+                                    )
+                                } else {
+                                    state.copy(
+                                        token = tokenFetchFailedMessage,
+                                        tokenRefreshing = false,
+                                    )
+                                }
+                            }
                     } else {
-                        state.copy(token = tokenFetchFailedMessage, tokenRefreshing = false)
+                        state = state.copy(
+                            token = tokenFetchFailedMessage,
+                            tokenRefreshing = false,
+                        )
                     }
                 }
             }

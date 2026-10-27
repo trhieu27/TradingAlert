@@ -3,6 +3,7 @@ package com.tradingalert.receiver.messaging
 import android.content.Intent
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessagingService
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.RemoteMessage
 import com.tradingalert.receiver.R
 import com.tradingalert.receiver.data.notification.NotificationHistoryRepository
@@ -101,8 +102,15 @@ class AlertMessagingService : FirebaseMessagingService() {
             .putLong(KEY_TOKEN_TIME, System.currentTimeMillis())
             .apply()
 
-        // TODO: Send the refreshed token to your authenticated application server.
-        Log.d(TAG, "FCM registration token refreshed")
+        FirebaseMessaging.getInstance()
+            .subscribeToTopic(BROADCAST_TOPIC)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d(TAG, "FCM token refreshed and broadcast topic subscribed")
+                } else {
+                    Log.w(TAG, "Unable to subscribe to FCM broadcast topic", task.exception)
+                }
+            }
     }
 
     companion object {
@@ -112,6 +120,7 @@ class AlertMessagingService : FirebaseMessagingService() {
         const val KEY_LAST_TITLE = "last_title"
         const val KEY_LAST_BODY = "last_body"
         const val KEY_LAST_TIME = "last_time"
+        const val BROADCAST_TOPIC = "trading_alerts"
         private const val ACTION_REMOTE_MESSAGE = "com.google.android.c2dm.intent.RECEIVE"
         private const val MAX_RECENT_MESSAGE_IDS = 20
         private const val TAG = "AlertMessaging"
