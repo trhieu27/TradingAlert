@@ -20,12 +20,17 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.tradingalert.receiver.R
 import com.tradingalert.receiver.ui.alertreceiver.AlertReceiverActivity
+import java.util.concurrent.atomic.AtomicInteger
 
 object NotificationHelper {
-    const val CHANNEL_ID = "trading_alerts_v3"
+    const val CHANNEL_ID = "trading_alerts_v4"
+    private const val PREVIOUS_MANUAL_SOUND_CHANNEL_ID = "trading_alerts_v3"
     private const val PREVIOUS_CHANNEL_ID = "trading_alerts_v2"
     private const val LEGACY_CHANNEL_ID = "firebase_alerts"
     private val mainHandler = Handler(Looper.getMainLooper())
+    private val notificationId = AtomicInteger(
+        (System.currentTimeMillis() and 0x7FFFFFFF).toInt(),
+    )
     private var activePlayer: MediaPlayer? = null
     private var stopSound: Runnable? = null
 
@@ -39,6 +44,7 @@ object NotificationHelper {
         val notificationManager = context.getSystemService(NotificationManager::class.java)
         notificationManager.deleteNotificationChannel(LEGACY_CHANNEL_ID)
         notificationManager.deleteNotificationChannel(PREVIOUS_CHANNEL_ID)
+        notificationManager.deleteNotificationChannel(PREVIOUS_MANUAL_SOUND_CHANNEL_ID)
 
         val channel = NotificationChannel(
             CHANNEL_ID,
@@ -96,7 +102,7 @@ object NotificationHelper {
             .setContentText(message.body)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_EVENT)
-            .setSilent(true)
+            .setOnlyAlertOnce(true)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .apply {
@@ -115,7 +121,7 @@ object NotificationHelper {
             .build()
 
         notificationManager.notify(notificationId, notification)
-        if (playSound) {
+        if (playSound && shouldPlayAppSound(context)) {
             playAlertSound(
                 context = context,
                 volumePercent = alertPreferences.volumePercent,
@@ -123,6 +129,13 @@ object NotificationHelper {
             )
         }
         return true
+    }
+
+    private fun shouldPlayAppSound(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return true
+        return context.getSystemService(NotificationManager::class.java)
+            .getNotificationChannel(CHANNEL_ID)
+            ?.sound == null
     }
 
     private fun playAlertSound(
@@ -178,5 +191,7 @@ object NotificationHelper {
         activePlayer = null
     }
 
-    internal fun nextId(): Int = (System.currentTimeMillis() and 0x7FFFFFFF).toInt()
+    internal fun nextId(): Int = notificationId.updateAndGet { current ->
+        if (current == Int.MAX_VALUE) 1 else current + 1
+    }
 }

@@ -40,7 +40,7 @@
             android:resource="@color/alert_blue" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="trading_alerts_v3" />
+            android:value="trading_alerts_v4" />
     </application>
 
 </manifest>

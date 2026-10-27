@@ -159,7 +159,7 @@ Nếu cần gửi payload dạng notification chuẩn, trường ảnh nằm tro
     "android": {
       "priority": "HIGH",
       "notification": {
-        "channel_id": "trading_alerts_v3"
+        "channel_id": "trading_alerts_v4"
       }
     }
   }
